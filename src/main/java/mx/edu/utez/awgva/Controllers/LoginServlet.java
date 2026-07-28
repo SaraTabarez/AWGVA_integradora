@@ -11,7 +11,7 @@ import mx.edu.utez.awgva.Service.UsuarioService;
 
 import java.io.IOException;
 
-@WebServlet(name = "LoginServlet", value = "login")
+@WebServlet(name = "LoginServlet", value = "/login")
 public class LoginServlet extends HttpServlet {
 
     private UsuarioService usuarioService;

@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import mx.edu.utez.awgva.Service.UsuarioService;
 
 import java.io.IOException;
-@WebServlet(name = "PasswordResetServlet", value = "reset-password")
+@WebServlet(name = "PasswordResetServlet", value = "/reset-password")
 public class PasswordResetServlet extends HttpServlet {
 
     private UsuarioService usuarioService;
