@@ -1,4 +1,4 @@
-package mx.edu.utez.awgva;
+package mx.edu.utez.awgva.Controller;
 
 import java.io.*;
 
