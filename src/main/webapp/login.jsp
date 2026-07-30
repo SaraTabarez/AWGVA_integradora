@@ -128,7 +128,6 @@
 
                                 <!-- Enlaces inferiores -->
                                 <div class="d-flex justify-content-between align-items-center small">
-                                    <a href="#" class="text-decoration-none text-muted">Registrar cuenta</a>
                                     <a href="<%= request.getContextPath() %>/recuperar-contra.jsp" class="text-decoration-none text-muted">¿Olvidaste tu contraseña?</a>
                                 </div>
                             </form>

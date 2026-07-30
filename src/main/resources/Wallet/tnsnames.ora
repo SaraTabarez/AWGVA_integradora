@@ -1,0 +1,12 @@
+v25gerfalhk9yatp_high = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=g9e822c86689358_v25gerfalhk9yatp_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+v25gerfalhk9yatp_medium = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=g9e822c86689358_v25gerfalhk9yatp_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+v25gerfalhk9yatp_low = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=g9e822c86689358_v25gerfalhk9yatp_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+v25gerfalhk9yatp_tp = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=g9e822c86689358_v25gerfalhk9yatp_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+v25gerfalhk9yatp_tpurgent = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.us-phoenix-1.oraclecloud.com))(connect_data=(service_name=g9e822c86689358_v25gerfalhk9yatp_tpurgent.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+
+

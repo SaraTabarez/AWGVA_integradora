@@ -71,12 +71,6 @@
                     <div class="mb-3">
                         <input type="email" class="form-control text-center bg-light border-0 py-2 fw-semibold" value="usuario@utez.edu.mx" readonly>
                     </div>
-                    <div class="text-center my-2">
-                        <span class="text-muted small">ó</span>
-                    </div>
-                    <div class="text-center mb-4">
-                        <a href="#" class="text-decoration-none fw-semibold" style="color: #ff7020;">Enviar SMS</a>
-                    </div>
                     <div class="d-flex justify-content-center gap-2 mb-4">
                         <input type="text" maxlength="1" class="code-input" autofocus>
                         <input type="text" maxlength="1" class="code-input">
@@ -90,7 +84,7 @@
                     <div class="row g-2">
                         <div class="col-6">
                             <a href="<%= request.getContextPath() %>/login.jsp" class="btn btn-orange w-100 py-2 d-flex align-items-center justify-content-center gap-2">
-                                <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+                                <i class="bi bi-box-arrow-in-right"></i> Volver al login
                             </a>
                         </div>
                         <div class="col-6">

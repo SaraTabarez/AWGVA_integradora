@@ -29,8 +29,13 @@ public class FiltroAutenticacion extends HttpFilter {
                         path.equals("/login") ||
                         path.equals("/recuperar-contra.jsp") ||
                         path.equals("/reset-password") ||
+                        path.equals("/nueva-solicitud.jsp") ||
+                        path.equals("/subir-docs.jsp") ||
+                        path.equals("/index.jsp") ||
                         path.equals("/assets/") ||
                         path.startsWith("/assets/") ||
+                        path.startsWith("/layout/") ||
+                        path.startsWith("/uploads/") ||
                         path.endsWith(".css") ||
                         path.endsWith(".js") ||
                         path.endsWith(".png") ||
