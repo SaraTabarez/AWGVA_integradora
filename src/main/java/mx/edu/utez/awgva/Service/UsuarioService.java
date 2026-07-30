@@ -28,8 +28,10 @@ public class UsuarioService {
         if (usuario.getEstado() == 0) {
             return null;
         }
-        String hashedPassword = hashPassword(password);
-        if (hashedPassword.equals(usuario.getPasswordHash())) {
+
+        // CORRECCIÓN: Comparamos la contraseña en texto plano directamente
+        // con la que viene de la base de datos, sin encriptarla.
+        if (password.equals(usuario.getPasswordHash())) {
             return usuario;
         }
         return null;

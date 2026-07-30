@@ -2,7 +2,7 @@
   Created by IntelliJ IDEA.
   User: pc
   Date: 27/07/2026
-  Time: 06:06 a. m.
+  Time: 06:06 a. m.
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
@@ -108,7 +108,8 @@
                                     <label class="form-label text-uppercase fw-bold small text-muted">Correo electrónico:</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
-                                        <input type="text" class="form-control bg-light border-start-0" name="usuario" placeholder="usuario@utez.edu.mx" required>
+                                        <!-- CORRECCIÓN AQUÍ: name="correo" -->
+                                        <input type="text" class="form-control bg-light border-start-0" name="correo" placeholder="usuario@utez.edu.mx" required>
                                     </div>
                                 </div>
 
