@@ -7,6 +7,9 @@
     <title>Nueva Solicitud - AWGVA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Librería para convertir HTML a PDF de forma exacta -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -21,7 +24,6 @@
             min-height: 100vh;
         }
 
-        /* Layout con espacio para sidebar fijo (240px) */
         .main-layout {
             margin-left: 240px;
             padding: 2.5rem 4rem;
@@ -29,7 +31,6 @@
             min-height: 100vh;
         }
 
-        /* Encabezado */
         .header-title-container {
             display: flex;
             justify-content: space-between;
@@ -50,7 +51,6 @@
             object-fit: contain;
         }
 
-        /* Subtítulos de Secciones */
         .section-header {
             color: #1e3a5f;
             font-weight: 700;
@@ -62,11 +62,6 @@
             margin-bottom: 1.2rem;
         }
 
-        .section-header i {
-            font-size: 1.3rem;
-        }
-
-        /* Labels */
         .form-label-custom {
             font-size: 0.85rem;
             font-weight: 700;
@@ -75,7 +70,6 @@
             display: block;
         }
 
-        /* Campos estilo gris claro/azul del mockup */
         .custom-input {
             background-color: #e2e8f0;
             border: 1px solid transparent;
@@ -94,10 +88,6 @@
             box-shadow: 0 0 0 0.2rem rgba(243, 130, 24, 0.15);
         }
 
-        .custom-input::placeholder {
-            color: #94a3b8;
-        }
-
         .input-icon-wrapper {
             position: relative;
             display: flex;
@@ -108,14 +98,12 @@
             position: absolute;
             left: 12px;
             color: #8a99ad;
-            font-size: 1rem;
         }
 
         .input-icon-wrapper .custom-input {
             padding-left: 2.2rem;
         }
 
-        /* Tablas personalizadas */
         .custom-table {
             width: 100%;
             border-collapse: collapse;
@@ -149,7 +137,7 @@
             color: #333;
         }
 
-        /* Botón de Enviar */
+        /* Estilo Botón Habilitado / Deshabilitado */
         .btn-submit {
             background-color: #f38218;
             color: #ffffff;
@@ -160,12 +148,18 @@
             font-size: 0.95rem;
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(243, 130, 24, 0.2);
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
         }
 
-        .btn-submit:hover {
+        .btn-submit:hover:not(:disabled) {
             background-color: #d9700f;
-            color: #ffffff;
+        }
+
+        .btn-submit:disabled {
+            background-color: #cbd5e1;
+            color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
         }
 
         .btn-cancel {
@@ -175,25 +169,82 @@
             font-weight: 500;
         }
 
-        .btn-cancel:hover {
-            text-decoration: underline;
+        /* CONFIGURACIÓN DEL PLANTILLA PARA EL PDF OCULTO */
+        #pdfTemplate {
+            display: none; /* Oculto en la pantalla web normal */
+            width: 750px;
+            padding: 30px;
+            background-color: #ffffff;
+            font-family: Arial, sans-serif;
+            color: #000;
+        }
+
+        .pdf-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .pdf-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .pdf-table th, .pdf-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+
+        .pdf-table th {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+
+        .pdf-section-title {
+            font-weight: bold;
+            font-size: 13px;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        .pdf-signatures {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 80px;
+            text-align: center;
+        }
+
+        .pdf-signature-line {
+            width: 250px;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            font-size: 11px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-<!-- Sidebar Fijo -->
 <jsp:include page="Layout/sidebar.jsp"/>
 
 <main class="main-layout">
-    <!-- Encabezado con Logo UTEZ -->
     <div class="header-title-container">
         <h1 class="main-title">SOLICITUD DE VISITAS ACADÉMICAS</h1>
-        <!-- Logo UTEZ -->
         <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Logo-utez.png" alt="UTEZ Logo" class="utez-logo" onerror="this.style.display='none'">
     </div>
 
-    <form action="solicitud-servlet" method="post">
+    <!-- Formulario principal con los inputs obligatorios (required) -->
+    <form id="solicitudForm" action="solicitud-servlet" method="post">
 
         <!-- SECCIÓN 1: Datos del Solicitante -->
         <div class="section-header">
@@ -204,11 +255,11 @@
         <div class="row g-3 mb-3">
             <div class="col-md-6">
                 <label class="form-label-custom">Nombre Completo *</label>
-                <input type="text" class="custom-input" name="docenteEncargado" placeholder="Nombre y Apellido del solicitante" required>
+                <input type="text" class="custom-input required-field" id="docenteEncargado" name="docenteEncargado" placeholder="Nombre y Apellido del solicitante" required>
             </div>
             <div class="col-md-6">
                 <label class="form-label-custom">Cargo / Rol *</label>
-                <input type="text" class="custom-input" name="tituloVisita" placeholder="Cargo en la Institución" required>
+                <input type="text" class="custom-input required-field" id="tituloVisita" name="tituloVisita" placeholder="Cargo en la Institución" required>
             </div>
         </div>
 
@@ -217,12 +268,12 @@
                 <label class="form-label-custom">Teléfono de contacto *</label>
                 <div class="input-icon-wrapper">
                     <i class="bi bi-telephone"></i>
-                    <input type="tel" class="custom-input" name="telefonoEmpresa" placeholder="Teléfono del Solicitante" required>
+                    <input type="tel" class="custom-input required-field" id="telefonoDocente" name="telefonoEmpresa" placeholder="Teléfono del Solicitante" required>
                 </div>
             </div>
             <div class="col-md-6">
                 <label class="form-label-custom">No. de Docentes acompañantes</label>
-                <input type="number" class="custom-input" name="docenteAcompanante" placeholder="Máximo 3 acompañantes" min="0" max="3">
+                <input type="number" class="custom-input" id="docenteAcompanante" name="docenteAcompanante" placeholder="Máximo 3 acompañantes" min="0" max="3">
             </div>
         </div>
 
@@ -234,12 +285,12 @@
 
         <div class="row g-3 mb-3">
             <div class="col-md-6">
-                <label class="form-label-custom">Dirección del lugar de la visitar *</label>
-                <input type="text" class="custom-input" name="direccionEmpresa" placeholder="Ubicación del lugar de la visita" required>
+                <label class="form-label-custom">Dirección del lugar a visitar *</label>
+                <input type="text" class="custom-input required-field" id="direccionEmpresa" name="direccionEmpresa" placeholder="Ubicación del lugar de la visita" required>
             </div>
             <div class="col-md-6">
                 <label class="form-label-custom">Nombre de la empresa a visitar *</label>
-                <input type="text" class="custom-input" name="nombreEmpresa" placeholder="Nombre del lugar a visitar" required>
+                <input type="text" class="custom-input required-field" id="nombreEmpresa" name="nombreEmpresa" placeholder="Nombre del lugar a visitar" required>
             </div>
         </div>
 
@@ -248,33 +299,33 @@
                 <label class="form-label-custom">Teléfono de contacto *</label>
                 <div class="input-icon-wrapper">
                     <i class="bi bi-telephone"></i>
-                    <input type="tel" class="custom-input" name="contacto" placeholder="Telefono del lugar a visitar" required>
+                    <input type="tel" class="custom-input required-field" id="contacto" name="contacto" placeholder="Telefono del lugar a visitar" required>
                 </div>
             </div>
             <div class="col-md-6">
                 <label class="form-label-custom">Correo electrónico del lugar de la visita *</label>
-                <input type="email" class="custom-input" name="correoEmpresa" placeholder="empresa@com.mx" required>
+                <input type="email" class="custom-input required-field" id="correoEmpresa" name="correoEmpresa" placeholder="empresa@com.mx" required>
             </div>
         </div>
 
         <div class="row g-3 mb-3">
             <div class="col-md-4">
                 <label class="form-label-custom">Fecha de inicio *</label>
-                <input type="date" class="custom-input" name="fechaInicio" required>
+                <input type="date" class="custom-input required-field" id="fechaInicio" name="fechaInicio" required>
             </div>
             <div class="col-md-4">
                 <label class="form-label-custom">Fecha de término *</label>
-                <input type="date" class="custom-input" name="fechaFin" required>
+                <input type="date" class="custom-input required-field" id="fechaFin" name="fechaFin" required>
             </div>
             <div class="col-md-4">
                 <label class="form-label-custom">Hora inicio *</label>
-                <input type="time" class="custom-input" name="horaInicio" required>
+                <input type="time" class="custom-input required-field" id="horaInicio" name="horaInicio" required>
             </div>
         </div>
 
         <div class="mb-4">
             <label class="form-label-custom">Objetivo de la visita *</label>
-            <textarea class="custom-input" name="proposito" rows="3" placeholder="Describir detalladamente el objetivo para la visita" required></textarea>
+            <textarea class="custom-input required-field" id="proposito" name="proposito" rows="3" placeholder="Describir detalladamente el objetivo para la visita" required></textarea>
         </div>
 
         <!-- Tabla Estudiantes por División -->
@@ -292,20 +343,19 @@
                 </thead>
                 <tbody>
                 <tr>
-                    <td><input type="number" name="estudiantesDACEA" min="0" value="0"></td>
-                    <td><input type="number" name="estudiantesDATEFI" min="0" value="0"></td>
-                    <td><input type="number" name="estudiantesDATID" min="0" value="0"></td>
-                    <td><input type="number" name="estudiantesDAMI" min="0" value="0"></td>
+                    <td><input type="number" id="dacea" name="estudiantesDACEA" min="0" value="0"></td>
+                    <td><input type="number" id="datefi" name="estudiantesDATEFI" min="0" value="0"></td>
+                    <td><input type="number" id="datid" name="estudiantesDATID" min="0" value="0"></td>
+                    <td><input type="number" id="dami" name="estudiantesDAMI" min="0" value="0"></td>
                     <td><input type="number" id="totalEstudiantes" name="numeroEstudiantes" readonly style="font-weight: bold;"></td>
                 </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- SECCIÓN 3: Información Exclusiva (Grupos y Asignaturas) -->
+        <!-- SECCIÓN 3: Información Exclusiva -->
         <p class="text-secondary small fw-semibold mt-4 mb-2">La siguiente información es de llenado exclusivo para visita académica</p>
 
-        <!-- Tabla de Grupos/Programa Educativo -->
         <div class="mb-4">
             <table class="custom-table">
                 <thead>
@@ -318,44 +368,168 @@
                 </thead>
                 <tbody>
                 <tr>
-                    <td><input type="text" name="programaEducativo" placeholder="Ej. TSU Tecnologías"></td>
-                    <td><input type="text" name="semestre" placeholder="Ej. 5to"></td>
-                    <td><input type="text" name="nombreGrupo" placeholder="Ej. A"></td>
-                    <td><input type="number" name="cantGrupo1" min="0"></td>
+                    <td><input type="text" class="required-field" id="prog1" name="programaEducativo" placeholder="Ej. TSU Tecnologías" required></td>
+                    <td><input type="text" class="required-field" id="cuatri1" name="semestre" placeholder="Ej. 5to" required></td>
+                    <td><input type="text" class="required-field" id="grupo1" name="nombreGrupo" placeholder="Ej. A" required></td>
+                    <td><input type="number" class="required-field" id="cant1" name="cantGrupo1" min="0" required></td>
                 </tr>
                 <tr>
-                    <td><input type="text" name="programaEducativo2"></td>
-                    <td><input type="text" name="semestre2"></td>
-                    <td><input type="text" name="nombreGrupo2"></td>
-                    <td><input type="number" name="cantGrupo2" min="0"></td>
-                </tr>
-                <tr>
-                    <td><input type="text" name="programaEducativo3"></td>
-                    <td><input type="text" name="semestre3"></td>
-                    <td><input type="text" name="nombreGrupo3"></td>
-                    <td><input type="number" name="cantGrupo3" min="0"></td>
+                    <td><input type="text" id="prog2" name="programaEducativo2"></td>
+                    <td><input type="text" id="cuatri2" name="semestre2"></td>
+                    <td><input type="text" id="grupo2" name="nombreGrupo2"></td>
+                    <td><input type="number" id="cant2" name="cantGrupo2" min="0"></td>
                 </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Asignaturas a Reforzar -->
         <div class="mb-5">
             <label class="form-label-custom">Asignaturas que se reforzarán con la visita *</label>
-            <textarea class="custom-input" name="asignatura" rows="3" placeholder="Escriba las asignaturas correspondientes..." required></textarea>
+            <textarea class="custom-input required-field" id="asignatura" name="asignatura" rows="3" placeholder="Escriba las asignaturas correspondientes..." required></textarea>
         </div>
 
-        <!-- Botones Inferiores -->
+        <!-- Botones Inferiores (El botón Guardar/Descargar estará deshabilitado al inicio) -->
         <div class="d-flex justify-content-between align-items-center pt-3 pb-5">
             <a href="index.jsp" class="btn-cancel">Atrás</a>
-            <button type="submit" class="btn-submit">Enviar Solicitud</button>
+            <button type="button" id="btnSubmit" class="btn-submit" disabled>
+                <i class="bi bi-download me-2"></i>Guardar y Descargar PDF
+            </button>
         </div>
 
     </form>
 </main>
 
+<!-- MOUNT OCULTO: PLANTILLA EXACTA DE LA FOTO DEL DOCUMENTO OFICIAL -->
+<div id="pdfTemplate">
+    <div class="pdf-header">
+        <span class="pdf-title">SOLICITUD DE VISITAS ACADÉMICAS</span>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Logo-utez.png" style="height: 35px;">
+    </div>
+
+    <div class="pdf-section-title">Datos del Lugar</div>
+    <table class="pdf-table">
+        <tr>
+            <td style="width: 30%; font-weight: bold;">Nombre de la empresa:</td>
+            <td id="pdf_nombreEmpresa" style="width: 70%;"></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Dirección o lugar:</td>
+            <td id="pdf_direccionEmpresa"></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Teléfono de contacto:</td>
+            <td id="pdf_contacto"></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Correo Electrónico:</td>
+            <td id="pdf_correoEmpresa"></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Fecha de inicio de la visita:</td>
+            <td><span id="pdf_fechaInicio"></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Hora de inicio:</b> <span id="pdf_horaInicio"></span></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Fecha de termino de la visita:</td>
+            <td id="pdf_fechaFin"></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>Objetivo de la visita:</b><br>
+                <div id="pdf_proposito" style="min-height: 40px; margin-top: 4px;"></div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="pdf-section-title">Datos de los Participantes</div>
+    <table class="pdf-table">
+        <tr>
+            <td style="width: 30%; font-weight: bold;">Área solicitante:</td>
+            <td id="pdf_tituloVisita" style="width: 70%;"></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Docente responsable:</td>
+            <td id="pdf_docenteEncargado"></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Celular de responsable:</td>
+            <td><span id="pdf_telefonoDocente"></span> &nbsp;&nbsp;&nbsp;&nbsp; <b>Docentes acompañantes:</b> <span id="pdf_docenteAcompanante"></span></td>
+        </tr>
+    </table>
+
+    <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">No. de estudiantes participantes por división academica:</div>
+    <table class="pdf-table" style="text-align: center;">
+        <thead>
+        <tr>
+            <th>DACEA</th>
+            <th>DATEFI</th>
+            <th>DATID</th>
+            <th>DAMI</th>
+            <th>Total estudiantes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td id="pdf_dacea">0</td>
+            <td id="pdf_datefi">0</td>
+            <td id="pdf_datid">0</td>
+            <td id="pdf_dami">0</td>
+            <td id="pdf_totalEstudiantes">0</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div style="font-size: 10px; font-style: italic; margin-top: 10px; margin-bottom: 4px;">
+        La siguiente información es de llenado exclusivo para visita académica
+    </div>
+
+    <table class="pdf-table" style="text-align: center;">
+        <thead>
+        <tr>
+            <th>Programa Educativo</th>
+            <th>Cuatrimestre</th>
+            <th>Grupo</th>
+            <th>No. Estudiantes</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td id="pdf_prog1"></td>
+            <td id="pdf_cuatri1"></td>
+            <td id="pdf_grupo1"></td>
+            <td id="pdf_cant1"></td>
+        </tr>
+        <tr>
+            <td id="pdf_prog2"></td>
+            <td id="pdf_cuatri2"></td>
+            <td id="pdf_grupo2"></td>
+            <td id="pdf_cant2"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div style="font-size: 11px; font-weight: bold; margin-top: 10px; margin-bottom: 4px;">Asignaturas que se reforzarán con la visita:</div>
+    <div id="pdf_asignatura" style="border: 1px solid #000; padding: 8px; font-size: 11px; min-height: 50px;"></div>
+
+    <div class="pdf-signatures">
+        <div>
+            <div class="pdf-signature-line">
+                Solicita<br><br><br>
+                <span id="pdf_sigDocente">________________________</span><br>
+                <small style="font-weight: normal;">Nombre del docente responsable de la visita</small>
+            </div>
+        </div>
+        <div>
+            <div class="pdf-signature-line">
+                Autoriza<br><br><br>
+                ________________________<br>
+                <small style="font-weight: normal;">Nombre y cargo del director de carrera/titular de área</small>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Suma automática de la tabla de estudiantes por división
+    // 1. CÁLCULO DE TOTAL DE ESTUDIANTES
     const inputsDivision = document.querySelectorAll('input[name^="estudiantes"]');
     const totalInput = document.getElementById('totalEstudiantes');
 
@@ -370,6 +544,84 @@
 
     inputsDivision.forEach(input => {
         input.addEventListener('input', calcularTotal);
+    });
+
+    // 2. VALIDACIÓN: HABILIAR/DESHABILITAR BOTÓN SI TODOS LOS CAMPOS ESTÁN LLENOS
+    const requiredInputs = document.querySelectorAll('.required-field');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    function validarFormulario() {
+        let todoLleno = true;
+        requiredInputs.forEach(input => {
+            if (!input.value.trim()) {
+                todoLleno = false;
+            }
+        });
+
+        btnSubmit.disabled = !todoLleno;
+    }
+
+    // Escuchar eventos en cada campo para validar en tiempo real
+    requiredInputs.forEach(input => {
+        input.addEventListener('input', validarFormulario);
+        input.addEventListener('change', validarFormulario);
+    });
+
+    // 3. GENERAR Y DESCARGAR PDF BASADO EN EL DOCUMENTO MODELO
+    btnSubmit.addEventListener('click', () => {
+        // Llenar plantilla PDF con los valores actuales del formulario
+        document.getElementById('pdf_nombreEmpresa').innerText = document.getElementById('nombreEmpresa').value;
+        document.getElementById('pdf_direccionEmpresa').innerText = document.getElementById('direccionEmpresa').value;
+        document.getElementById('pdf_contacto').innerText = document.getElementById('contacto').value;
+        document.getElementById('pdf_correoEmpresa').innerText = document.getElementById('correoEmpresa').value;
+        document.getElementById('pdf_fechaInicio').innerText = document.getElementById('fechaInicio').value;
+        document.getElementById('pdf_horaInicio').innerText = document.getElementById('horaInicio').value;
+        document.getElementById('pdf_fechaFin').innerText = document.getElementById('fechaFin').value;
+        document.getElementById('pdf_proposito').innerText = document.getElementById('proposito').value;
+
+        document.getElementById('pdf_tituloVisita').innerText = document.getElementById('tituloVisita').value;
+        document.getElementById('pdf_docenteEncargado').innerText = document.getElementById('docenteEncargado').value;
+        document.getElementById('pdf_telefonoDocente').innerText = document.getElementById('telefonoDocente').value;
+        document.getElementById('pdf_docenteAcompanante').innerText = document.getElementById('docenteAcompanante').value || '0';
+
+        document.getElementById('pdf_dacea').innerText = document.getElementById('dacea').value || '0';
+        document.getElementById('pdf_datefi').innerText = document.getElementById('datefi').value || '0';
+        document.getElementById('pdf_datid').innerText = document.getElementById('datid').value || '0';
+        document.getElementById('pdf_dami').innerText = document.getElementById('dami').value || '0';
+        document.getElementById('pdf_totalEstudiantes').innerText = document.getElementById('totalEstudiantes').value || '0';
+
+        document.getElementById('pdf_prog1').innerText = document.getElementById('prog1').value;
+        document.getElementById('pdf_cuatri1').innerText = document.getElementById('cuatri1').value;
+        document.getElementById('pdf_grupo1').innerText = document.getElementById('grupo1').value;
+        document.getElementById('pdf_cant1').innerText = document.getElementById('cant1').value;
+
+        document.getElementById('pdf_prog2').innerText = document.getElementById('prog2').value;
+        document.getElementById('pdf_cuatri2').innerText = document.getElementById('cuatri2').value;
+        document.getElementById('pdf_grupo2').innerText = document.getElementById('grupo2').value;
+        document.getElementById('pdf_cant2').innerText = document.getElementById('cant2').value;
+
+        document.getElementById('pdf_asignatura').innerText = document.getElementById('asignatura').value;
+        document.getElementById('pdf_sigDocente').innerText = document.getElementById('docenteEncargado').value;
+
+        // Mostrar elemento temporalmente para renderizado del PDF
+        const element = document.getElementById('pdfTemplate');
+        element.style.display = 'block';
+
+        // Opciones del PDF
+        const opt = {
+            margin:       0.3,
+            filename:     'Solicitud_Visita_Academica.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        // Descargar PDF y enviar formulario
+        html2pdf().set(opt).from(element).save().then(() => {
+            element.style.display = 'none'; // Volver a ocultar
+            // Opcional: Descomenta la siguiente línea si deseas enviar el formulario al servlet automáticamente tras descargar
+            // document.getElementById('solicitudForm').submit();
+        });
     });
 </script>
 
