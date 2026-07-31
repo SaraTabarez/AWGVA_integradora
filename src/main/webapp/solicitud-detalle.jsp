@@ -456,8 +456,9 @@
                                 <% } %>
                             </div>
 
+                            <!-- BOTÓN OFICIO HABILITADO -->
                             <div class="col-md-4">
-                                <button type="button" class="btn-doc-grey">Oficio de autorización</button>
+                                <a href="oficio-autorizacion.jsp?index=<%= indexNum %>" class="btn-doc-navy">Oficio de autorización</a>
                             </div>
                         </div>
 
@@ -468,8 +469,9 @@
                             <div class="col-md-4">
                                 <a href="cartaResponsiva.jsp?index=<%= indexNum %>" class="btn-doc-navy">Carta resp s/firmas</a>
                             </div>
+                            <!-- BOTÓN REPORTE HABILITADO -->
                             <div class="col-md-4">
-                                <button type="button" class="btn-doc-navy">Reporte</button>
+                                <a href="llenar-reporte.jsp?index=<%= indexNum %>" class="btn-doc-navy">Reporte</a>
                             </div>
                         </div>
                     </div>

@@ -20,6 +20,9 @@ public class SolicitudVisita {
     private String totalEstudiantes;
     private String asignaturas;
 
+    // NUEVO CAMPO: Estado de la solicitud (por defecto "PENDIENTE")
+    private String estado = "PENDIENTE";
+
     public SolicitudVisita() {}
 
     // Getters y Setters
@@ -76,4 +79,8 @@ public class SolicitudVisita {
 
     public String getAsignaturas() { return asignaturas; }
     public void setAsignaturas(String asignaturas) { this.asignaturas = asignaturas; }
+
+    // GETTER Y SETTER DE ESTADO
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
 }

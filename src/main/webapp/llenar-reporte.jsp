@@ -1,664 +1,356 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="mx.edu.utez.awgva.Model.SolicitudVisita" %>
+<%@ page import="java.util.List" %>
 <%
-    request.setCharacterEncoding("UTF-8");
+    List<SolicitudVisita> lista = (List<SolicitudVisita>) session.getAttribute("listaSolicitudes");
+    SolicitudVisita sol = null;
+    String indexParam = request.getParameter("index");
 
-    if ("POST".equalsIgnoreCase(request.getMethod())) {
-        session.setAttribute("fechaSolicitud", request.getParameter("fechaSolicitud"));
-        session.setAttribute("areaSolicitante", request.getParameter("areaSolicitante"));
-        session.setAttribute("docenteResponsable", request.getParameter("docenteResponsable"));
-        session.setAttribute("telefonoDocente", request.getParameter("telefonoDocente"));
-        session.setAttribute("docenteAcompanante", request.getParameter("docenteAcompanante"));
-        session.setAttribute("divisionParticipante", request.getParameter("divisionParticipante"));
-
-        session.setAttribute("programaEducativo1", request.getParameter("programaEducativo1"));
-        session.setAttribute("cuatrimestre1", request.getParameter("cuatrimestre1"));
-        session.setAttribute("grupo1", request.getParameter("grupo1"));
-        session.setAttribute("numEstudiantes1", request.getParameter("numEstudiantes1"));
-
-        session.setAttribute("programaEducativo2", request.getParameter("programaEducativo2"));
-        session.setAttribute("cuatrimestre2", request.getParameter("cuatrimestre2"));
-        session.setAttribute("grupo2", request.getParameter("grupo2"));
-        session.setAttribute("numEstudiantes2", request.getParameter("numEstudiantes2"));
-
-        session.setAttribute("empresa", request.getParameter("empresa"));
-        session.setAttribute("direccionEmpresa", request.getParameter("direccionEmpresa"));
-        session.setAttribute("telefonoEmpresa", request.getParameter("telefonoEmpresa"));
-        session.setAttribute("correoEmpresa", request.getParameter("correoEmpresa"));
-        session.setAttribute("objetivoVisita", request.getParameter("objetivoVisita"));
-        session.setAttribute("fechaInicio", request.getParameter("fechaInicio"));
-        session.setAttribute("fechaTermino", request.getParameter("fechaTermino"));
-
-        if (request.getParameter("foto1Base64") != null && !request.getParameter("foto1Base64").isEmpty()) {
-            session.setAttribute("foto1Base64", request.getParameter("foto1Base64"));
+    if (lista != null && !lista.isEmpty() && indexParam != null) {
+        try {
+            int indexNum = Integer.parseInt(indexParam);
+            if (indexNum >= 0 && indexNum < lista.size()) {
+                sol = lista.get(indexNum);
+            }
+        } catch (NumberFormatException e) {
+            sol = new SolicitudVisita();
         }
-        if (request.getParameter("foto2Base64") != null && !request.getParameter("foto2Base64").isEmpty()) {
-            session.setAttribute("foto2Base64", request.getParameter("foto2Base64"));
-        }
-        if (request.getParameter("foto3Base64") != null && !request.getParameter("foto3Base64").isEmpty()) {
-            session.setAttribute("foto3Base64", request.getParameter("foto3Base64"));
-        }
-        if (request.getParameter("reporteFirmadoBase64") != null && !request.getParameter("reporteFirmadoBase64").isEmpty()) {
-            session.setAttribute("reporteFirmadoBase64", request.getParameter("reporteFirmadoBase64"));
-        }
-
-        session.setAttribute("estatusReporte", "PENDIENTE_REVISION");
-        response.sendRedirect(request.getContextPath() + "/views/reportes/detalles-reporte.jsp");
-        return;
+    } else {
+        sol = new SolicitudVisita(); // Objeto vacío de seguridad
     }
-
-    String estatus = (String) session.getAttribute("estatusReporte");
-    int pasoActual = 7;
-
-    if ("PENDIENTE_REVISION".equals(estatus)) {
-        pasoActual = 8;
-    } else if ("ACEPTADO".equals(estatus) || "CONCRETADO".equals(estatus)) {
-        pasoActual = 9;
-    }
-
-    class Helper {
-        String val(HttpSession s, String key) {
-            Object v = s.getAttribute(key);
-            return (v != null) ? v.toString() : "";
-        }
-    }
-    Helper h = new Helper();
 %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Llenar Reporte Docente - UTEZ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Visita Académica</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
+        body, html {
+            height: 100%;
             margin: 0;
-            padding: 0;
+            background-color: #9cb0c4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        body {
+        .full-wrapper {
+            min-height: 100vh;
             display: flex;
-            background-color: #f4f6f9;
-            color: #333;
+            padding: 1rem;
+        }
+        .app-container {
+            flex: 1;
+            background: #ffffff;
+            display: flex;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
 
-        /* Sidebar Lateral */
+        /* SIDEBAR IDENTICO AL ORIGINAL */
         .sidebar {
             width: 240px;
-            height: 100vh;
-            background-color: #1b365d;
-            color: white;
-            position: fixed;
-            top: 0;
-            left: 0;
+            background-color: #1f3a5e;
+            color: #ffffff;
+            padding: 2rem 1rem;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 25px 0 20px 0;
-            z-index: 100;
-        }
-
-        .user-profile-top {
-            display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 0 25px 20px 25px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            margin-bottom: 15px;
-        }
-
-        .user-profile-top svg {
-            width: 36px;
-            height: 36px;
-            fill: #fca311;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            padding: 4px;
             flex-shrink: 0;
         }
-
-        .user-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            font-size: 14px;
-            font-weight: bold;
-            color: white;
-        }
-
-        .user-role {
-            font-size: 11px;
-            color: #cbd5e1;
-        }
-
-        .menu-items {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            flex-grow: 1;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: white;
-            text-decoration: none;
-            padding: 12px 30px;
-            font-size: 15px;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .menu-item svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-
-        .menu-item:hover {
-            background-color: rgba(255, 255, 255, 0.08);
-        }
-
-        .menu-item.active {
-            color: #ff8c00;
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        .logout-box {
-            padding: 15px 25px 0 25px;
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .logout-link {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #ff6b6b;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .logout-link svg {
-            width: 18px;
-            height: 18px;
-            fill: #ff6b6b;
-        }
-
-        /* Contenido Principal */
-        .main-container {
-            margin-left: 240px;
-            width: calc(100% - 240px);
-            background-color: #ffffff;
-            padding: 20px 40px 40px 40px;
-            min-height: 100vh;
-        }
-
-        .location-badge {
-            background-color: #e3ebf3;
-            color: #1b365d;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 6px 12px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-bottom: 15px;
-            border-left: 4px solid #fca311;
-        }
-
-        /* Stepper */
-        .stepper-box {
-            border: 1px solid #777;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 25px;
-            background: #fff;
-        }
-
-        .stepper {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            position: relative;
-        }
-
-        .stepper-line {
-            position: absolute;
-            top: 20px;
-            left: 30px;
-            right: 30px;
-            height: 2px;
-            background-color: #ccc;
-            z-index: 1;
-        }
-
-        .step {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            width: 80px;
-        }
-
-        .step-icon {
-            width: 36px;
-            height: 36px;
+        .avatar-circle {
+            width: 75px;
+            height: 75px;
+            background-color: #e2e8f0;
             border-radius: 50%;
-            background-color: #e59339;
-            color: white;
-            margin: 0 auto 5px auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            transition: all 0.3s ease;
+            color: #1f3a5e;
+            font-size: 2.4rem;
+            margin-bottom: 0.5rem;
+        }
+        .role-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            margin-bottom: 2.5rem;
+        }
+        .sidebar-menu { width: 100%; list-style: none; padding: 0; margin: 0; }
+        .sidebar-menu li { margin-bottom: 0.8rem; }
+        .sidebar-menu a {
+            color: #ffffff; text-decoration: none; display: flex; align-items: center;
+            gap: 12px; font-size: 0.95rem; font-weight: 500; padding: 10px 14px; border-radius: 8px;
+        }
+        .sidebar-menu a:hover, .sidebar-menu a.active { background-color: rgba(255,255,255,0.15); }
+        .logout-link { margin-top: auto; width: 100%; }
+        .logout-link a { color: #ffffff; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+
+        /* CONTENIDO PRINCIPAL */
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem 3rem;
+            overflow-y: auto;
+            background-color: #ffffff;
         }
 
-        .step-icon.disabled {
-            background-color: #ccc;
-            color: transparent;
-        }
-
-        .step-text {
-            font-size: 10px;
-            color: #333;
-            line-height: 1.1;
-        }
-
-        /* Encabezado */
-        .header-section {
+        /* BARRA DE PROGRESO SIMULADA */
+        .progress-tracker {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: flex-start;
-            margin-bottom: 20px;
+            margin-bottom: 2rem;
+            gap: 15px;
+            text-align: center;
         }
+        .step { display: flex; flex-direction: column; align-items: center; width: 70px; }
+        .step-icon {
+            width: 35px; height: 35px; border-radius: 50%; background-color: #f59e0b; color: white;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 5px; font-size: 0.9rem;
+        }
+        .step-icon.pending { background-color: #cbd5e1; color: #64748b; }
+        .step-text { font-size: 0.65rem; color: #475569; line-height: 1.1; font-weight: 600; }
 
         .header-title {
-            font-size: 22px;
-            font-weight: bold;
-            color: #1e3a5f;
-            text-transform: uppercase;
+            color: #0f172a; font-weight: bold; font-size: 1.6rem; margin-bottom: 2rem;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .logo-utez {
-            text-align: right;
-            font-weight: bold;
-            font-size: 20px;
-            color: #002b49;
-            font-style: italic;
-        }
-
-        .logo-sub {
-            font-size: 8px;
-            display: block;
-            color: #555;
-            font-style: normal;
-        }
-
-        .format-code {
-            text-align: right;
-            font-size: 13px;
-            font-weight: bold;
-            color: #222;
-        }
-
-        /* Formulario y Secciones */
-        .section-box {
-            border: 2px solid #0099ff;
-            border-radius: 4px;
-            padding: 15px;
-            margin-bottom: 25px;
-        }
-
         .section-title {
-            font-size: 18px;
-            color: #2c4a6f;
-            margin-bottom: 12px;
-            font-weight: bold;
-            margin-top: 15px;
+            color: #1f3a5e; font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; margin-top: 1.5rem;
         }
 
-        .form-grid {
-            display: grid;
-            gap: 12px 15px;
-            margin-bottom: 10px;
+        /* INPUTS ESTILO FIGMA */
+        .custom-label {
+            font-size: 0.85rem; font-weight: 700; color: #1f3a5e; margin-bottom: 0.3rem;
+        }
+        .input-readonly {
+            background-color: #e2e8f0; border: none; border-radius: 4px; padding: 6px 12px;
+            font-size: 0.9rem; color: #64748b; width: 100%; font-weight: 500; outline: none;
         }
 
-        .grid-2 { grid-template-columns: 2fr 1fr; }
-        .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
-        .grid-4 { grid-template-columns: 2fr 1fr 1fr 1fr; }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
+        /* CAJA DE SUBIDA DE ARCHIVOS */
+        .upload-box {
+            border: 1px solid #94a3b8; border-radius: 8px; padding: 1.5rem; margin-top: 1rem;
         }
+        .upload-title { color: #f59e0b; font-weight: bold; font-size: 1.1rem; margin-bottom: 1rem; }
+        .file-upload-wrapper { display: flex; gap: 15px; flex-wrap: wrap; }
 
-        .form-group label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #1e3a5f;
-            margin-bottom: 4px;
+        .upload-square {
+            width: 120px; height: 120px; background-color: #e2e8f0; border-radius: 6px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: background 0.2s; text-align: center;
         }
+        .upload-square:hover { background-color: #cbd5e1; }
+        .upload-square span { font-size: 1.5rem; color: #64748b; margin-bottom: 5px; }
+        .upload-square .foto-text { font-weight: bold; color: #0f172a; font-size: 0.9rem; margin: 0;}
+        .upload-square .sel-text { color: #f59e0b; font-weight: bold; font-size: 0.8rem; }
+        input[type="file"] { display: none; }
 
-        .form-group input {
-            background-color: #e3ebf3;
-            border: 1px solid #c0d1e3;
-            border-radius: 4px;
-            padding: 8px 12px;
-            font-size: 13px;
-            color: #333;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: #0099ff;
-            background-color: #fff;
-        }
-
-        /* Subida de Evidencias */
-        .evidence-box {
-            border: 1px solid #777;
-            padding: 15px;
-            margin-top: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .evidence-left { flex: 1.5; }
-        .evidence-right {
-            flex: 1;
-            border-left: 1px solid #ddd;
-            padding-left: 20px;
-        }
-
-        .evidence-title {
-            font-weight: bold;
-            color: #e59339;
-            font-size: 15px;
-            margin-bottom: 10px;
-        }
-
-        .photos-container {
-            display: flex;
-            gap: 12px;
-            margin-top: 10px;
-        }
-
-        .photo-uploader {
-            width: 120px;
-            height: 80px;
-            border: 1px dashed #0099ff;
-            border-radius: 4px;
-            background: #f0f7ff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            text-align: center;
-            font-size: 10px;
-            position: relative;
-            overflow: hidden;
-            color: #666;
-        }
-
-        .photo-uploader img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        /* Botones inferiores */
-        .bottom-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-        }
-
+        /* BOTONES FINALES */
         .btn-atras {
-            background-color: #fca311;
-            color: white;
-            border: none;
-            padding: 10px 30px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
+            background-color: #f59e0b; color: white; font-weight: bold; border: none;
+            padding: 10px 30px; border-radius: 6px; text-decoration: none;
         }
-
-        .btn-responsiva {
-            background-color: #2b6cb0;
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-right: 8px;
-        }
-
-        .btn-guardar {
-            background-color: #fca311;
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn-guardar:hover {
-            background-color: #e59339;
-        }
-
-        @media print {
-            .sidebar, .stepper-box, .bottom-bar, .no-print, .location-badge {
-                display: none !important;
-            }
-            .main-container {
-                margin-left: 0 !important;
-                width: 100% !important;
-                padding: 0 !important;
-            }
-            .section-box { border: 1px solid #000 !important; }
-            input { background-color: #fff !important; border: 1px solid #000 !important; }
+        .btn-enviar {
+            background-color: #f59e0b; color: white; font-weight: bold; border: none;
+            padding: 10px; border-radius: 6px; width: 100%; max-width: 400px;
         }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <div>
-        <div class="user-profile-top">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            <div class="user-info">
-                <span class="user-name">Docente Activo</span>
-                <span class="user-role">Profesor</span>
-            </div>
+<div class="full-wrapper">
+    <div class="app-container">
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="avatar-circle"><i class="bi bi-person"></i></div>
+            <div class="role-title">DOCENTE</div>
+            <ul class="sidebar-menu">
+                <li><a href="solicitud.jsp"><i class="bi bi-house-door"></i> Inicio</a></li>
+                <li><a href="solicitud.jsp"><i class="bi bi-file-earmark-text"></i> Solicitud</a></li>
+                <li><a href="#" class="active"><i class="bi bi-camera"></i> Reporte</a></li>
+                <li><a href="#"><i class="bi bi-clock-history"></i> Histórico</a></li>
+            </ul>
+            <div class="logout-link"><a href="#"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a></div>
         </div>
 
-        <nav class="menu-items">
-            <a href="${pageContext.request.contextPath}/views/inicio.jsp" class="menu-item">
-                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Inicio
-            </a>
-            <a href="${pageContext.request.contextPath}/views/solicitudes/solicitud.jsp" class="menu-item">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Solicitud
-            </a>
-            <a href="${pageContext.request.contextPath}/views/reportes/llenar-reporte.jsp" class="menu-item active">
-                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Reporte
-            </a>
-            <a href="${pageContext.request.contextPath}/views/historico/historico.jsp" class="menu-item">
-                <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg> Histórico
-            </a>
-        </nav>
-    </div>
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
 
-    <div class="logout-box">
-        <a href="${pageContext.request.contextPath}/logout" class="logout-link">
-            <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
-            Cerrar sesión
-        </a>
-    </div>
-</div>
-
-<div class="main-container">
-    <div class="location-badge">📍 Estás en: Módulo de Reportes &gt; Llenar Reporte de Visita</div>
-
-    <div class="stepper-box">
-        <div class="stepper">
-            <div class="stepper-line"></div>
-            <div class="step"><div class="step-icon">✓</div><div class="step-text">Solicitud creada</div></div>
-            <div class="step"><div class="step-icon">✓</div><div class="step-text">Solicitud enviada</div></div>
-            <div class="step"><div class="step-icon">✓</div><div class="step-text">Solicitud aceptada</div></div>
-            <div class="step"><div class="step-icon">✓</div><div class="step-text">Carta responsiva enviada</div></div>
-            <div class="step"><div class="step-icon">✓</div><div class="step-text">Carta responsiva aceptada</div></div>
-            <div class="step"><div class="step-icon">✓</div><div class="step-text">Visita en curso</div></div>
-            <div class="step"><div class="step-icon <%= pasoActual >= 7 ? "" : "disabled" %>">✓</div><div class="step-text">Llenar Reporte</div></div>
-            <div class="step"><div class="step-icon <%= pasoActual >= 8 ? "" : "disabled" %>"><%= pasoActual >= 8 ? "✓" : "" %></div><div class="step-text">Reporte aceptado</div></div>
-            <div class="step"><div class="step-icon <%= pasoActual >= 9 ? "" : "disabled" %>"><%= pasoActual >= 9 ? "✓" : "" %></div><div class="step-text">Visita concretada</div></div>
-        </div>
-    </div>
-
-    <div class="header-section">
-        <div>
-            <h1 class="header-title">REPORTE DE VISITA ACADÉMICA</h1>
-            <div style="margin-top: 15px;">
-                <div class="form-group" style="width: 240px;">
-                    <label>Fecha de solicitud:</label>
-                    <input type="text" form="formReporte" id="fechaSolicitud" name="fechaSolicitud" value="<%= h.val(session, "fechaSolicitud") %>" placeholder="DD/MM/AAAA">
-                </div>
-            </div>
-        </div>
-        <div>
-            <div class="logo-utez">
-                UTEZ
-                <span class="logo-sub">UNIVERSIDAD TECNOLÓGICA DEL ESTADO DE MORELOS</span>
-            </div>
-            <div class="format-code" style="margin-top: 15px;">FO-UTEZ-EST-08<br>rev.08</div>
-        </div>
-    </div>
-
-    <form id="formReporte" action="${pageContext.request.contextPath}/views/reportes/llenar-reporte.jsp" method="post">
-        <div class="section-box">
-            <div class="section-title">Datos de los participantes y Responsables</div>
-            <div class="form-grid grid-3">
-                <div class="form-group"><label>Área del solicitante:</label><input type="text" name="areaSolicitante" value="<%= h.val(session, "areaSolicitante") %>"></div>
-                <div class="form-group"><label>Docente responsable:</label><input type="text" name="docenteResponsable" value="<%= h.val(session, "docenteResponsable") %>"></div>
-                <div class="form-group"><label>Teléfono de contacto:</label><input type="text" name="telefonoDocente" value="<%= h.val(session, "telefonoDocente") %>"></div>
+            <!-- Simulador de Barra de Progreso -->
+            <div class="progress-tracker">
+                <div class="step"><div class="step-icon"><i class="bi bi-file-earmark-text"></i></div><div class="step-text">Solicitud creada</div></div>
+                <div class="step"><div class="step-icon"><i class="bi bi-send"></i></div><div class="step-text">Solicitud enviada</div></div>
+                <div class="step"><div class="step-icon"><i class="bi bi-check-circle"></i></div><div class="step-text">Solicitud aceptada</div></div>
+                <div class="step"><div class="step-icon"><i class="bi bi-envelope-paper"></i></div><div class="step-text">Carta responsiva enviada</div></div>
+                <div class="step"><div class="step-icon"><i class="bi bi-check2-all"></i></div><div class="step-text">Carta responsiva aceptada</div></div>
+                <div class="step"><div class="step-icon"><i class="bi bi-bus-front"></i></div><div class="step-text">Visita en curso</div></div>
+                <div class="step"><div class="step-icon"><i class="bi bi-camera"></i></div><div class="step-text">Reporte enviado</div></div>
+                <div class="step"><div class="step-icon pending"><i class="bi bi-shield-check"></i></div><div class="step-text">Reporte aceptado</div></div>
+                <div class="step"><div class="step-icon pending"><i class="bi bi-flag"></i></div><div class="step-text">Visita concretada</div></div>
             </div>
 
-            <div class="form-grid grid-2">
-                <div class="form-group"><label>Docente acompañante:</label><input type="text" name="docenteAcompanante" value="<%= h.val(session, "docenteAcompanante") %>"></div>
-                <div class="form-group"><label>División o área del participante:</label><input type="text" name="divisionParticipante" value="<%= h.val(session, "divisionParticipante") %>"></div>
-            </div>
-
-            <div class="form-grid grid-4">
-                <div class="form-group"><label>Programa educativo:</label><input type="text" id="progEdu1" name="programaEducativo1" value="<%= h.val(session, "programaEducativo1") %>"></div>
-                <div class="form-group"><label>Cuatrimestre:</label><input type="text" name="cuatrimestre1" value="<%= h.val(session, "cuatrimestre1") %>"></div>
-                <div class="form-group"><label>Grupo:</label><input type="text" name="grupo1" value="<%= h.val(session, "grupo1") %>"></div>
-                <div class="form-group"><label>Nu. de Estudiantes:</label><input type="text" name="numEstudiantes1" value="<%= h.val(session, "numEstudiantes1") %>"></div>
-            </div>
-
-            <div class="form-grid grid-4">
-                <div class="form-group"><label>Programa educativo:</label><input type="text" name="programaEducativo2" value="<%= h.val(session, "programaEducativo2") %>"></div>
-                <div class="form-group"><label>Cuatrimestre:</label><input type="text" name="cuatrimestre2" value="<%= h.val(session, "cuatrimestre2") %>"></div>
-                <div class="form-group"><label>Grupo:</label><input type="text" name="grupo2" value="<%= h.val(session, "grupo2") %>"></div>
-                <div class="form-group"><label>Nu. de Estudiantes:</label><input type="text" name="numEstudiantes2" value="<%= h.val(session, "numEstudiantes2") %>"></div>
-            </div>
-        </div>
-
-        <div class="section-title">Datos del lugar a visitar</div>
-
-        <div class="form-grid grid-3">
-            <div class="form-group"><label>Nombre de la empresa o actividad:</label><input type="text" id="empresaNom" name="empresa" value="<%= h.val(session, "empresa") %>"></div>
-            <div class="form-group"><label>Lugar o dirección:</label><input type="text" name="direccionEmpresa" value="<%= h.val(session, "direccionEmpresa") %>"></div>
-            <div class="form-group"><label>Teléfono de contacto:</label><input type="text" name="telefonoEmpresa" value="<%= h.val(session, "telefonoEmpresa") %>"></div>
-        </div>
-
-        <div class="form-grid grid-4">
-            <div class="form-group"><label>Correo electrónico:</label><input type="text" name="correoEmpresa" value="<%= h.val(session, "correoEmpresa") %>"></div>
-            <div class="form-group"><label>Objetivo de la visita:</label><input type="text" name="objetivoVisita" value="<%= h.val(session, "objetivoVisita") %>"></div>
-            <div class="form-group"><label>Fecha de inicio:</label><input type="text" id="fechaIni" name="fechaInicio" value="<%= h.val(session, "fechaInicio") %>"></div>
-            <div class="form-group"><label>Fecha de término:</label><input type="text" id="fechaFin" name="fechaTermino" value="<%= h.val(session, "fechaTermino") %>"></div>
-        </div>
-
-        <div class="evidence-box">
-            <div class="evidence-left">
-                <div class="evidence-title">1. Subida de Fotografías (Evidencias)</div>
-                <div class="photos-container">
-                    <%
-                        String f1 = h.val(session, "foto1Base64");
-                        String f2 = h.val(session, "foto2Base64");
-                        String f3 = h.val(session, "foto3Base64");
-                        String fRep = h.val(session, "reporteFirmadoBase64");
-                    %>
-                    <div class="photo-uploader" onclick="document.getElementById('f1').click()">
-                        <span id="txt1" style="<%= !f1.isEmpty() ? "display:none;" : "" %>">📷 Cargar Foto 1</span>
-                        <img id="img1" src="<%= f1 %>" style="<%= f1.isEmpty() ? "display:none;" : "" %>">
-                        <input type="file" id="f1" accept="image/*" style="display:none" onchange="cargarPreview(this, 'img1', 'txt1', 'foto1Base64')">
-                    </div>
-                    <div class="photo-uploader" onclick="document.getElementById('f2').click()">
-                        <span id="txt2" style="<%= !f2.isEmpty() ? "display:none;" : "" %>">📷 Cargar Foto 2</span>
-                        <img id="img2" src="<%= f2 %>" style="<%= f2.isEmpty() ? "display:none;" : "" %>">
-                        <input type="file" id="f2" accept="image/*" style="display:none" onchange="cargarPreview(this, 'img2', 'txt2', 'foto2Base64')">
-                    </div>
-                    <div class="photo-uploader" onclick="document.getElementById('f3').click()">
-                        <span id="txt3" style="<%= !f3.isEmpty() ? "display:none;" : "" %>">📷 Cargar Foto 3</span>
-                        <img id="img3" src="<%= f3 %>" style="<%= f3.isEmpty() ? "display:none;" : "" %>">
-                        <input type="file" id="f3" accept="image/*" style="display:none" onchange="cargarPreview(this, 'img3', 'txt3', 'foto3Base64')">
-                    </div>
+            <!-- Cabecera -->
+            <div class="header-title">
+                REPORTE DE VISITA ACADÉMICA
+                <div style="text-align: right; font-size: 0.8rem; color: #0f172a; font-weight: bold;">
+                    FO-UTEZ-EST-08<br>rev.08
                 </div>
             </div>
 
-            <div class="evidence-right no-print">
-                <div class="evidence-title">2. Subida de Carta Responsiva Firmada</div>
-                <p style="font-size: 11px; color:#555; margin-bottom: 8px;">
-                    Genera la responsiva, imprímela, fírmala en físico y sube la foto/archivo firmado aquí:
-                </p>
-                <div class="photo-uploader" style="width: 100%; height: 60px;" onclick="document.getElementById('fReporte').click()">
-                    <span id="txtReporte" style="<%= !fRep.isEmpty() ? "display:none;" : "" %>">📄 Subir Foto de Carta Responsiva Firmada</span>
-                    <img id="imgReporte" src="<%= fRep %>" style="<%= fRep.isEmpty() ? "display:none;" : "" %>">
-                    <input type="file" id="fReporte" accept="image/*" style="display:none" onchange="cargarPreview(this, 'imgReporte', 'txtReporte', 'reporteFirmadoBase64')">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="custom-label">Fecha de solicitud:</div>
+                    <input type="text" class="input-readonly" value="<%= (sol.getDatefi() != null) ? sol.getDatefi() : "" %>" readonly>
                 </div>
             </div>
-        </div>
 
-        <input type="hidden" name="foto1Base64" id="foto1Base64" value="<%= f1 %>">
-        <input type="hidden" name="foto2Base64" id="foto2Base64" value="<%= f2 %>">
-        <input type="hidden" name="foto3Base64" id="foto3Base64" value="<%= f3 %>">
-        <input type="hidden" name="reporteFirmadoBase64" id="reporteFirmadoBase64" value="<%= fRep %>">
+            <!-- INICIO DEL FORMULARIO - Modificado para ir directo a la vista de éxito -->
+            <form action="UploadServlet" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="solicitudIndex" value="<%= indexParam %>">
 
-        <div class="bottom-bar no-print">
-            <button type="button" class="btn-atras" onclick="window.history.back()">Atrás</button>
-            <div>
-                <button type="submit" class="btn-guardar">Enviar Reporte a Revisión</button>
-            </div>
+                <!-- SECCIÓN 1 -->
+                <div class="section-title">Datos de los participantes y Responsables</div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <div class="custom-label">Área del solicitante:</div>
+                        <input type="text" class="input-readonly" value="<%= (sol.getSolicitanteCargo() != null) ? sol.getSolicitanteCargo() : "DATID" %>" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="custom-label">Docente responsable:</div>
+                        <input type="text" class="input-readonly" value="<%= (sol.getSolicitanteNombre() != null) ? sol.getSolicitanteNombre() : "" %>" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="custom-label">Teléfono de contacto:</div>
+                        <input type="text" class="input-readonly" value="📞 <%= (sol.getSolicitanteTelefono() != null) ? sol.getSolicitanteTelefono() : "" %>" readonly>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="custom-label">Docente acompañante:</div>
+                        <input type="text" class="input-readonly" value="<%= (sol.getDocentesAcompanantes() != null) ? sol.getDocentesAcompanantes() : "" %>" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="custom-label">División o área del participante:</div>
+                        <input type="text" class="input-readonly" value="<%= (sol.getDacea() != null && !sol.getDacea().isEmpty()) ? "DACEA" : "DATID / DAMI" %>" readonly>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-2">
+                    <div class="col-md-3">
+                        <div class="custom-label">Programa educativo:</div>
+                        <input type="text" class="input-readonly" value="<%= (sol.getAsignaturas() != null) ? sol.getAsignaturas() : "" %>" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-label">Cuatrimestre:</div>
+                        <input type="text" class="input-readonly" value="-" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-label">Grupo:</div>
+                        <input type="text" class="input-readonly" value="-" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-label">Nu. de Estudiantes:</div>
+                        <input type="text" class="input-readonly" value="<%= (sol.getTotalEstudiantes() != null) ? sol.getTotalEstudiantes() : "0" %>" readonly>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2 -->
+                <div class="section-title">Datos del lugar a visitar</div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <div class="custom-label">Nombre de la empresa o actividad:</div>
+                        <input type="text" class="input-readonly" value="<%= (sol.getEmpresaNombre() != null) ? sol.getEmpresaNombre() : "" %>" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="custom-label">Lugar o dirección:</div>
+                        <input type="text" class="input-readonly" value="<%= (sol.getEmpresaDireccion() != null) ? sol.getEmpresaDireccion() : "" %>" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="custom-label">Teléfono de contacto:</div>
+                        <input type="text" class="input-readonly" value="📞 <%= (sol.getEmpresaTelefono() != null) ? sol.getEmpresaTelefono() : "" %>" readonly>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="custom-label">Correo electrónico:</div>
+                        <input type="text" class="input-readonly" value="<%= (sol.getEmpresaEmail() != null) ? sol.getEmpresaEmail() : "" %>" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="custom-label">Objetivo de la visita:</div>
+                        <input type="text" class="input-readonly" value="<%= (sol.getObjetivo() != null) ? sol.getObjetivo() : "" %>" readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="custom-label">Fecha de inicio:</div>
+                        <input type="text" class="input-readonly" value="📅 <%= (sol.getFechaInicio() != null) ? sol.getFechaInicio() : "" %>" readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="custom-label">Fecha de término:</div>
+                        <input type="text" class="input-readonly" value="📅 <%= (sol.getFechaTermino() != null) ? sol.getFechaTermino() : "" %>" readonly>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 3: EVIDENCIAS -->
+                <div class="upload-box">
+                    <div class="upload-title">Subida de Documentos y Evidencias</div>
+                    <div class="custom-label text-dark mb-3"><i class="bi bi-camera-fill text-warning"></i> Asignatura que se refuerza con la visita:</div>
+
+                    <div class="file-upload-wrapper">
+                        <!-- Foto 1 -->
+                        <label class="upload-square" for="foto1">
+                            <span>+</span>
+                            <p class="foto-text">Foto 1</p>
+                            <p class="sel-text">Seleccionar</p>
+                            <input type="file" id="foto1" name="imagen1" accept="image/*" required onchange="actualizarTexto(this, 1)">
+                        </label>
+
+                        <!-- Foto 2 -->
+                        <label class="upload-square" for="foto2">
+                            <span>+</span>
+                            <p class="foto-text">Foto 2</p>
+                            <p class="sel-text">Seleccionar</p>
+                            <input type="file" id="foto2" name="imagen2" accept="image/*" required onchange="actualizarTexto(this, 2)">
+                        </label>
+
+                        <!-- Foto 3 -->
+                        <label class="upload-square" for="foto3">
+                            <span>+</span>
+                            <p class="foto-text">Foto 3</p>
+                            <p class="sel-text">Seleccionar</p>
+                            <input type="file" id="foto3" name="imagen3" accept="image/*" required onchange="actualizarTexto(this, 3)">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- BOTONES DE ACCIÓN -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="solicitud-detalle.jsp?index=<%= indexParam %>" class="btn-atras">Atras</a>
+                    <button type="submit" class="btn-enviar">[Enviar Reporte a Revisión]</button>
+                </div>
+
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 
 <script>
-    function cargarPreview(input, imgId, txtId, hiddenId) {
+    // Script sencillo para que cuando seleccionen la foto, el cuadro avise que ya se cargó
+    function actualizarTexto(input, num) {
         if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                document.getElementById(imgId).src = e.target.result;
-                document.getElementById(imgId).style.display = 'block';
-                document.getElementById(txtId).style.display = 'none';
-                document.getElementById(hiddenId).value = e.target.result;
-            }
-            reader.readAsDataURL(input.files[0]);
+            let label = input.parentElement;
+            label.style.backgroundColor = '#dcfce3'; // Cambia a un tonito verde
+            label.querySelector('.sel-text').textContent = 'Cargada ✓';
+            label.querySelector('.sel-text').style.color = '#166534';
         }
     }
 </script>
+
 </body>
 </html>
