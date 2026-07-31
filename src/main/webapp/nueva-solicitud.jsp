@@ -4,213 +4,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nueva Solicitud</title>
+    <title>Nueva Solicitud - AWGVA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 0;
-        }
-        .main-content {
-            margin-left: 250px;
-            padding: 30px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #ffffff;
+            color: #1e3a5f;
             min-height: 100vh;
         }
-        .form-container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-top: 20px;
+
+        /* Layout con espacio para sidebar fijo (240px) */
+        .main-layout {
+            margin-left: 240px;
+            padding: 2.5rem 4rem;
+            background-color: #ffffff;
+            min-height: 100vh;
         }
-        .form-label {
+
+        /* Encabezado */
+        .header-title-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .main-title {
+            color: #1e3a5f;
+            font-weight: 800;
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+            margin: 0;
+        }
+
+        .utez-logo {
+            height: 45px;
+            object-fit: contain;
+        }
+
+        /* Subtítulos de Secciones */
+        .section-header {
+            color: #1e3a5f;
+            font-weight: 700;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 1.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .section-header i {
+            font-size: 1.3rem;
+        }
+
+        /* Labels */
+        .form-label-custom {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+
+        /* Campos estilo gris claro/azul del mockup */
+        .custom-input {
+            background-color: #e2e8f0;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 0.55rem 0.8rem;
+            width: 100%;
+            color: #333333;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .custom-input:focus {
+            background-color: #ffffff;
+            border-color: #f38218;
+            box-shadow: 0 0 0 0.2rem rgba(243, 130, 24, 0.15);
+        }
+
+        .custom-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .input-icon-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon-wrapper i {
+            position: absolute;
+            left: 12px;
+            color: #8a99ad;
+            font-size: 1rem;
+        }
+
+        .input-icon-wrapper .custom-input {
+            padding-left: 2.2rem;
+        }
+
+        /* Tablas personalizadas */
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+
+        .custom-table th {
+            border: 1px solid #1e3a5f;
+            color: #1e3a5f;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-align: center;
+            padding: 6px 8px;
+            background-color: #ffffff;
+        }
+
+        .custom-table td {
+            border: 1px solid #1e3a5f;
+            padding: 0;
+            background-color: #e2e8f0;
+        }
+
+        .custom-table td input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 8px;
+            text-align: center;
+            outline: none;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        /* Botón de Enviar */
+        .btn-submit {
+            background-color: #f38218;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.65rem 2rem;
             font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(243, 130, 24, 0.2);
+            transition: background-color 0.2s;
         }
-        .form-control, .form-select {
-            padding: 10px 15px;
-            border-radius: 5px;
+
+        .btn-submit:hover {
+            background-color: #d9700f;
+            color: #ffffff;
         }
-        .btn-primary {
-            background-color: #3498db;
-            border-color: #3498db;
-            padding: 10px 25px;
+
+        .btn-cancel {
+            color: #334155;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
-        .btn-primary:hover {
-            background-color: #2980b9;
-            border-color: #2980b9;
-        }
-        .btn-secondary {
-            padding: 10px 25px;
-        }
-        h5.text-primary {
-            color: #3498db !important;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3498db;
-        }
-        hr {
-            margin: 30px 0;
-            border-color: #e0e0e0;
-        }
-        @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-                padding: 15px;
-            }
+
+        .btn-cancel:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
+
+<!-- Sidebar Fijo -->
 <jsp:include page="Layout/sidebar.jsp"/>
 
-<div class="main-content">
-    <div class="container-fluid">
-        <h2 class="mb-4">Nueva Solicitud de Visita Académica</h2>
-
-        <div class="form-container">
-            <form action="solicitud-servlet" method="post">
-                <!-- Datos de la Visita -->
-                <h5 class="text-primary">Información de la Visita</h5>
-                <div class="row g-3">
-                    <div class="col-12 mb-3">
-                        <label for="tituloVisita" class="form-label">Título de la Visita *</label>
-                        <input type="text" class="form-control" id="tituloVisita" name="tituloVisita" required>
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="fechaInicio" class="form-label">Fecha de Inicio *</label>
-                        <input type="date" class="form-control" id="fechaInicio" name="fechaInicio" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="fechaFin" class="form-label">Fecha de Fin *</label>
-                        <input type="date" class="form-control" id="fechaFin" name="fechaFin" required>
-                    </div>
-                </div>
-
-                <div class="row g-3 mt-1">
-                    <div class="col-md-6">
-                        <label for="asignatura" class="form-label">Asignatura a Reforzar *</label>
-                        <input type="text" class="form-control" id="asignatura" name="asignatura" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="division" class="form-label">División Académica *</label>
-                        <select class="form-select" id="division" name="division" required>
-                            <option value="">Seleccionar...</option>
-                            <option value="1">DATID</option>
-                            <option value="2">DAMI</option>
-                            <option value="3">DACEA</option>
-                            <option value="4">DATEFI</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row g-3 mt-1">
-                    <div class="col-md-6">
-                        <label for="docenteEncargado" class="form-label">Docente Encargado *</label>
-                        <input type="text" class="form-control" id="docenteEncargado" name="docenteEncargado" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="docenteAcompanante" class="form-label">Docente Acompañante</label>
-                        <input type="text" class="form-control" id="docenteAcompanante" name="docenteAcompanante">
-                    </div>
-                </div>
-
-                <div class="mb-3 mt-3">
-                    <label for="proposito" class="form-label">Propósito de la Visita *</label>
-                    <textarea class="form-control" id="proposito" name="proposito" rows="4" required></textarea>
-                </div>
-
-                <hr>
-
-                <!-- Datos de la Empresa -->
-                <h5 class="text-primary">Información de la Empresa</h5>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="nombreEmpresa" class="form-label">Nombre de la Empresa *</label>
-                        <input type="text" class="form-control" id="nombreEmpresa" name="nombreEmpresa" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="telefonoEmpresa" class="form-label">Teléfono</label>
-                        <input type="tel" class="form-control" id="telefonoEmpresa" name="telefonoEmpresa">
-                    </div>
-                </div>
-
-                <div class="row g-3 mt-1">
-                    <div class="col-md-6">
-                        <label for="correoEmpresa" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="correoEmpresa" name="correoEmpresa">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="contacto" class="form-label">Persona de Contacto</label>
-                        <input type="text" class="form-control" id="contacto" name="contacto">
-                    </div>
-                </div>
-
-                <div class="mb-3 mt-3">
-                    <label for="direccionEmpresa" class="form-label">Dirección</label>
-                    <textarea class="form-control" id="direccionEmpresa" name="direccionEmpresa" rows="2"></textarea>
-                </div>
-
-                <hr>
-
-                <!-- Datos del Grupo -->
-                <h5 class="text-primary">Información del Grupo</h5>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label for="programaEducativo" class="form-label">Programa Educativo *</label>
-                        <input type="text" class="form-control" id="programaEducativo" name="programaEducativo" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="semestre" class="form-label">Semestre *</label>
-                        <select class="form-select" id="semestre" name="semestre" required>
-                            <option value="">Seleccionar...</option>
-                            <option value="1">1er Semestre</option>
-                            <option value="2">2do Semestre</option>
-                            <option value="3">3er Semestre</option>
-                            <option value="4">4to Semestre</option>
-                            <option value="5">5to Semestre</option>
-                            <option value="6">6to Semestre</option>
-                            <option value="7">7mo Semestre</option>
-                            <option value="8">8vo Semestre</option>
-                            <option value="9">9no Semestre</option>
-                            <option value="10">10mo Semestre</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="nombreGrupo" class="form-label">Grupo *</label>
-                        <input type="text" class="form-control" id="nombreGrupo" name="nombreGrupo" placeholder="Ej: A, B, C" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="numeroEstudiantes" class="form-label">N° Estudiantes *</label>
-                        <input type="number" class="form-control" id="numeroEstudiantes" name="numeroEstudiantes" min="1" required>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-between mt-4">
-                    <a href="index.jsp" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Cancelar
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i>Guardar Solicitud
-                    </button>
-                </div>
-            </form>
-        </div>
+<main class="main-layout">
+    <!-- Encabezado con Logo UTEZ -->
+    <div class="header-title-container">
+        <h1 class="main-title">SOLICITUD DE VISITAS ACADÉMICAS</h1>
+        <!-- Logo UTEZ -->
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Logo-utez.png" alt="UTEZ Logo" class="utez-logo" onerror="this.style.display='none'">
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <form action="solicitud-servlet" method="post">
+
+        <!-- SECCIÓN 1: Datos del Solicitante -->
+        <div class="section-header">
+            <i class="bi bi-person-badge"></i>
+            <span>Datos del Solicitante</span>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label-custom">Nombre Completo *</label>
+                <input type="text" class="custom-input" name="docenteEncargado" placeholder="Nombre y Apellido del solicitante" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label-custom">Cargo / Rol *</label>
+                <input type="text" class="custom-input" name="tituloVisita" placeholder="Cargo en la Institución" required>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label class="form-label-custom">Teléfono de contacto *</label>
+                <div class="input-icon-wrapper">
+                    <i class="bi bi-telephone"></i>
+                    <input type="tel" class="custom-input" name="telefonoEmpresa" placeholder="Teléfono del Solicitante" required>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label-custom">No. de Docentes acompañantes</label>
+                <input type="number" class="custom-input" name="docenteAcompanante" placeholder="Máximo 3 acompañantes" min="0" max="3">
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: Datos de la visita -->
+        <div class="section-header">
+            <i class="bi bi-geo-alt"></i>
+            <span>Datos de la visita</span>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label-custom">Dirección del lugar de la visitar *</label>
+                <input type="text" class="custom-input" name="direccionEmpresa" placeholder="Ubicación del lugar de la visita" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label-custom">Nombre de la empresa a visitar *</label>
+                <input type="text" class="custom-input" name="nombreEmpresa" placeholder="Nombre del lugar a visitar" required>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label-custom">Teléfono de contacto *</label>
+                <div class="input-icon-wrapper">
+                    <i class="bi bi-telephone"></i>
+                    <input type="tel" class="custom-input" name="contacto" placeholder="Telefono del lugar a visitar" required>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label-custom">Correo electrónico del lugar de la visita *</label>
+                <input type="email" class="custom-input" name="correoEmpresa" placeholder="empresa@com.mx" required>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label-custom">Fecha de inicio *</label>
+                <input type="date" class="custom-input" name="fechaInicio" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label-custom">Fecha de término *</label>
+                <input type="date" class="custom-input" name="fechaFin" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label-custom">Hora inicio *</label>
+                <input type="time" class="custom-input" name="horaInicio" required>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label-custom">Objetivo de la visita *</label>
+            <textarea class="custom-input" name="proposito" rows="3" placeholder="Describir detalladamente el objetivo para la visita" required></textarea>
+        </div>
+
+        <!-- Tabla Estudiantes por División -->
+        <div class="mb-4">
+            <label class="form-label-custom">No. de estudiantes participantes por división academica: *</label>
+            <table class="custom-table">
+                <thead>
+                <tr>
+                    <th>DACEA</th>
+                    <th>DATEFI</th>
+                    <th>DATID</th>
+                    <th>DAMI</th>
+                    <th>Total estudiantes</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><input type="number" name="estudiantesDACEA" min="0" value="0"></td>
+                    <td><input type="number" name="estudiantesDATEFI" min="0" value="0"></td>
+                    <td><input type="number" name="estudiantesDATID" min="0" value="0"></td>
+                    <td><input type="number" name="estudiantesDAMI" min="0" value="0"></td>
+                    <td><input type="number" id="totalEstudiantes" name="numeroEstudiantes" readonly style="font-weight: bold;"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECCIÓN 3: Información Exclusiva (Grupos y Asignaturas) -->
+        <p class="text-secondary small fw-semibold mt-4 mb-2">La siguiente información es de llenado exclusivo para visita académica</p>
+
+        <!-- Tabla de Grupos/Programa Educativo -->
+        <div class="mb-4">
+            <table class="custom-table">
+                <thead>
+                <tr>
+                    <th style="width: 40%;">Programa Educativo</th>
+                    <th style="width: 20%;">Cuatrimestre</th>
+                    <th style="width: 20%;">Grupo</th>
+                    <th style="width: 20%;">No. Estudiantes</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><input type="text" name="programaEducativo" placeholder="Ej. TSU Tecnologías"></td>
+                    <td><input type="text" name="semestre" placeholder="Ej. 5to"></td>
+                    <td><input type="text" name="nombreGrupo" placeholder="Ej. A"></td>
+                    <td><input type="number" name="cantGrupo1" min="0"></td>
+                </tr>
+                <tr>
+                    <td><input type="text" name="programaEducativo2"></td>
+                    <td><input type="text" name="semestre2"></td>
+                    <td><input type="text" name="nombreGrupo2"></td>
+                    <td><input type="number" name="cantGrupo2" min="0"></td>
+                </tr>
+                <tr>
+                    <td><input type="text" name="programaEducativo3"></td>
+                    <td><input type="text" name="semestre3"></td>
+                    <td><input type="text" name="nombreGrupo3"></td>
+                    <td><input type="number" name="cantGrupo3" min="0"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Asignaturas a Reforzar -->
+        <div class="mb-5">
+            <label class="form-label-custom">Asignaturas que se reforzarán con la visita *</label>
+            <textarea class="custom-input" name="asignatura" rows="3" placeholder="Escriba las asignaturas correspondientes..." required></textarea>
+        </div>
+
+        <!-- Botones Inferiores -->
+        <div class="d-flex justify-content-between align-items-center pt-3 pb-5">
+            <a href="index.jsp" class="btn-cancel">Atrás</a>
+            <button type="submit" class="btn-submit">Enviar Solicitud</button>
+        </div>
+
+    </form>
+</main>
+
+<script>
+    // Suma automática de la tabla de estudiantes por división
+    const inputsDivision = document.querySelectorAll('input[name^="estudiantes"]');
+    const totalInput = document.getElementById('totalEstudiantes');
+
+    function calcularTotal() {
+        let suma = 0;
+        inputsDivision.forEach(input => {
+            const val = parseInt(input.value) || 0;
+            suma += val;
+        });
+        totalInput.value = suma;
+    }
+
+    inputsDivision.forEach(input => {
+        input.addEventListener('input', calcularTotal);
+    });
+</script>
+
 </body>
 </html>

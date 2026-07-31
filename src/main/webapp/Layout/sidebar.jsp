@@ -1,10 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 <style>
     .sidebar {
-        width: 250px;
-        background-color: #2c3e50;
-        color: white;
-        padding: 20px;
+        width: 240px;
+        background-color: #1e3a5f;
+        color: #ffffff;
+        padding: 40px 24px 30px 24px;
         height: 100vh;
         position: fixed;
         left: 0;
@@ -14,83 +16,106 @@
         justify-content: space-between;
         z-index: 1000;
         margin: 0;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
+
+    /* Perfil de Usuario */
     .sidebar .user-profile {
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 45px;
     }
     .sidebar .user-profile .avatar {
-        width: 80px;
-        height: 80px;
-        background-color: #34495e;
+        width: 85px;
+        height: 85px;
+        background-color: #d1d5db;
+        color: #4b5563;
         border-radius: 50%;
-        margin: 0 auto 10px auto;
+        margin: 0 auto 16px auto;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 40px;
+        font-size: 48px;
     }
     .sidebar .user-profile .username {
-        font-weight: bold;
-        font-size: 1.1em;
+        font-weight: 700;
+        font-size: 1rem;
+        letter-spacing: 0.8px;
+        color: #ffffff;
     }
+
+    /* Navegación */
     .sidebar nav ul {
         list-style: none;
         padding: 0;
         margin: 0;
-    }
-    .sidebar nav ul li {
-        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
     .sidebar nav ul li a {
-        color: white;
+        color: #ffffff;
         text-decoration: none;
         display: flex;
         align-items: center;
-        padding: 12px 15px;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: background-color 0.2s ease, opacity 0.2s ease;
     }
     .sidebar nav ul li a i {
-        margin-right: 10px;
-        font-size: 1.2em;
-        width: 20px;
+        margin-right: 14px;
+        font-size: 1.25rem;
+        width: 22px;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-    .sidebar nav ul li a:hover,
+
+    /* Estados Hover y Activo */
+    .sidebar nav ul li a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
     .sidebar nav ul li a.active {
-        background-color: #3498db;
+        background-color: rgba(255, 255, 255, 0.15);
     }
+
+    /* Cerrar Sesión */
     .sidebar .logout {
         margin-top: auto;
     }
     .sidebar .logout a {
-        color: white;
+        color: #ffffff;
         text-decoration: none;
         display: flex;
         align-items: center;
-        padding: 12px 15px;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: background-color 0.2s ease;
     }
     .sidebar .logout a:hover {
-        background-color: #e74c3c;
+        background-color: rgba(255, 255, 255, 0.1);
     }
     .sidebar .logout a i {
-        margin-right: 10px;
-        font-size: 1.2em;
-        width: 20px;
+        margin-right: 14px;
+        font-size: 1.25rem;
+        width: 22px;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <div class="sidebar">
     <div>
         <div class="user-profile">
             <div class="avatar">
-                <i class="fas fa-user"></i>
+                <i class="bi bi-person"></i>
             </div>
             <div class="username">DOCENTE</div>
         </div>
@@ -98,25 +123,25 @@
             <ul>
                 <li>
                     <a href="index.jsp" class="${pageContext.request.requestURI.endsWith('index.jsp') ? 'active' : ''}">
-                        <i class="fas fa-home"></i>
+                        <i class="bi bi-house"></i>
                         Inicio
                     </a>
                 </li>
                 <li>
                     <a href="nueva-solicitud.jsp" class="${pageContext.request.requestURI.endsWith('nueva-solicitud.jsp') ? 'active' : ''}">
-                        <i class="fas fa-file-alt"></i>
+                        <i class="bi bi-file-earmark-text"></i>
                         Solicitud
                     </a>
                 </li>
                 <li>
                     <a href="subir-docs.jsp" class="${pageContext.request.requestURI.endsWith('subir-docs.jsp') ? 'active' : ''}">
-                        <i class="fas fa-upload"></i>
+                        <i class="bi bi-file-earmark-lines"></i>
                         Reporte
                     </a>
                 </li>
                 <li>
                     <a href="#" class="${pageContext.request.requestURI.endsWith('historico.jsp') ? 'active' : ''}">
-                        <i class="fas fa-history"></i>
+                        <i class="bi bi-file-earmark-clock"></i>
                         Histórico
                     </a>
                 </li>
@@ -125,8 +150,8 @@
     </div>
     <div class="logout">
         <a href="logout">
-            <i class="fas fa-sign-out-alt"></i>
-            Cerrar Sesión
+            <i class="bi bi-box-arrow-right"></i>
+            Cerrar sesión
         </a>
     </div>
 </div>
