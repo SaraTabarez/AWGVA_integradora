@@ -1,6 +1,10 @@
 package mx.edu.utez.awgva.Utils;
 
+import java.io.File;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -9,8 +13,6 @@ import java.util.Properties;
 public class DatabaseConnection {
 
     private static final String PROPERTIES_FILE = "database.properties";
-    private static final String WALLET_DIR = "C:/Users/Menny/Desktop/integradora/AWGVA_integradora/src/main/resources/Wallet";
-
     private static Properties dbProperties;
 
     static {
@@ -21,7 +23,6 @@ public class DatabaseConnection {
             }
             dbProperties.load(is);
 
-            // Solo cargamos el driver aquí, quitamos el System.setProperty que Tomcat ignoraba
             Class.forName(dbProperties.getProperty("db.driver"));
             System.out.println("Driver de Oracle cargado correctamente.");
 
@@ -35,29 +36,38 @@ public class DatabaseConnection {
     public static Connection getConnection() throws SQLException {
         String url = dbProperties.getProperty("db.url");
 
-        // --- AQUÍ ESTÁ EL TRUCO DEFINITIVO ---
-        // Creamos un objeto Properties y le pasamos todo directamente a la conexión
         Properties info = new Properties();
         info.put("user", dbProperties.getProperty("db.user"));
         info.put("password", dbProperties.getProperty("db.password"));
 
-        // Ruta de la wallet
-        info.put("oracle.net.tns_admin", WALLET_DIR);
+        // --- DETECCIÓN DINÁMICA DE LA RUTA DE LA WALLET ---
+        URL walletUrl = DatabaseConnection.class.getClassLoader().getResource("Wallet");
 
-        // Forzamos explícitamente el uso de JKS en esta conexión específica
-        info.put("javax.net.ssl.trustStore", WALLET_DIR + "/truststore.jks");
+        if (walletUrl == null) {
+            throw new SQLException("No se encontró la carpeta 'Wallet' en el classpath (resources).");
+        }
+
+        // Decodificamos la ruta por si tiene espacios o caracteres especiales en Windows
+        String walletDir = URLDecoder.decode(walletUrl.getPath(), StandardCharsets.UTF_8);
+
+        // En Windows, getPath() devuelve "/C:/Ruta...", así que lo convertimos a un File válido
+        walletDir = new File(walletDir).getAbsolutePath();
+
+        // Asignamos las rutas dinámicas directamente a la conexión
+        info.put("oracle.net.tns_admin", walletDir);
+
+        info.put("javax.net.ssl.trustStore", walletDir + File.separator + "truststore.jks");
         info.put("javax.net.ssl.trustStoreType", "JKS");
         info.put("javax.net.ssl.trustStorePassword", "AWGVAint3Bdsm");
 
-        info.put("javax.net.ssl.keyStore", WALLET_DIR + "/keystore.jks");
+        info.put("javax.net.ssl.keyStore", walletDir + File.separator + "keystore.jks");
         info.put("javax.net.ssl.keyStoreType", "JKS");
         info.put("javax.net.ssl.keyStorePassword", "AWGVAint3Bdsm");
-        // -------------------------------------
+        // ------------------------------------------------
 
         try {
-            // Usamos el método que acepta el objeto Properties completo
             Connection conn = DriverManager.getConnection(url, info);
-            System.out.println("✓ Conexión establecida con éxito a Oracle forzando modo JKS.");
+            System.out.println("✓ Conexión establecida con éxito a Oracle Cloud (Ruta Dinámica).");
             return conn;
         } catch (SQLException e) {
             System.err.println("✗ Error al conectar a la base de datos: " + e.getMessage());

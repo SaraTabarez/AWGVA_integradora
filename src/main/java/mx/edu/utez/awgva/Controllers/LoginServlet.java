@@ -41,7 +41,8 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("usuario", usuario);
             session.setAttribute("nombreUsuario", usuario.getNombreCompleto());
 
-            response.sendRedirect("index.jsp");
+            // Redirección usando la ruta relativa del contexto para evitar confusiones de Tomcat
+            response.sendRedirect(request.getContextPath() + "/index.jsp");
         } else {
             request.setAttribute("error", "Correo o contraseña incorrectos.");
             request.getRequestDispatcher("login.jsp").forward(request, response);
@@ -51,6 +52,6 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.sendRedirect("login.jsp");
+        response.sendRedirect(request.getContextPath() + "/login.jsp");
     }
 }
