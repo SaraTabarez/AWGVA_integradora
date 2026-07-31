@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentos Subidos</title>
+    <title>Documentos Subidos / Reporte</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -36,6 +36,8 @@
             font-size: 24px;
             font-weight: 600;
         }
+
+        /* Stepper con colores naranjas */
         .stepper {
             display: flex;
             justify-content: space-between;
@@ -98,6 +100,8 @@
             color: #ff6b35;
             font-weight: 500;
         }
+
+        /* Sección Upload */
         .upload-section {
             background: white;
             padding: 30px;
@@ -151,6 +155,8 @@
             font-size: 13px;
             color: #666;
         }
+
+        /* Tabla de Documentos */
         .documents-table {
             background: white;
             padding: 30px;
@@ -161,33 +167,32 @@
             margin-bottom: 0;
         }
         .table thead th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #e0e0e0;
+            background-color: #1e3a5f;
+            color: #ffffff;
             font-weight: 600;
-            color: #333;
             font-size: 13px;
             padding: 12px 15px;
+            border: none;
         }
         .table tbody td {
             padding: 12px 15px;
             font-size: 13px;
-            color: #666;
+            color: #333;
             vertical-align: middle;
+            background-color: #f8f9fa;
         }
-        .badge {
+        .badge-draft {
+            background-color: #1e3a5f;
+            color: #ffffff;
             padding: 5px 12px;
             border-radius: 20px;
             font-size: 11px;
             font-weight: 500;
         }
-        .badge-draft {
-            background-color: #fff3cd;
-            color: #856404;
-        }
         .action-btn {
             background: none;
             border: none;
-            color: #666;
+            color: #333;
             padding: 5px 10px;
             cursor: pointer;
             transition: color 0.3s ease;
@@ -198,37 +203,48 @@
         .action-btn.delete:hover {
             color: #dc3545;
         }
+
+        /* Botones de Navegación */
         .navigation-buttons {
             display: flex;
             justify-content: space-between;
             margin-top: 25px;
         }
         .btn-custom {
-            padding: 10px 30px;
-            border-radius: 5px;
-            font-weight: 500;
+            padding: 10px 35px;
+            border-radius: 6px;
+            font-weight: 600;
             transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
         }
-        .btn-secondary-custom {
-            background-color: #6c757d;
-            border-color: #6c757d;
+
+        /* Botón Anterior en Naranja */
+        .btn-orange {
+            background-color: #ff6b35;
+            border-color: #ff6b35;
             color: white;
         }
-        .btn-secondary-custom:hover {
-            background-color: #5a6268;
-            border-color: #5a6268;
+        .btn-orange:hover {
+            background-color: #e55a2b;
+            border-color: #e55a2b;
             color: white;
         }
+
+        /* Botón Subir en Naranja */
         .btn-primary-custom {
             background-color: #ff6b35;
             border-color: #ff6b35;
             color: white;
+            border: none;
         }
         .btn-primary-custom:hover {
             background-color: #e55a2b;
             border-color: #e55a2b;
             color: white;
         }
+
         @media (max-width: 768px) {
             .main-content {
                 margin-left: 0;
@@ -250,10 +266,10 @@
 <div class="main-content">
     <div class="container-fluid">
         <div class="page-header">
-            <h2>Documentos subidos/responsiva</h2>
+            <h2>Documentos subidos/Reporte</h2>
         </div>
 
-        <!-- Stepper de progreso -->
+        <!-- Stepper de progreso (Hasta el paso 7 completado) -->
         <div class="stepper">
             <div class="step completed">
                 <div class="step-circle">1</div>
@@ -279,7 +295,7 @@
                 <div class="step-circle">6</div>
                 <div class="step-label">Visita en curso</div>
             </div>
-            <div class="step completed">
+            <div class="step completed active">
                 <div class="step-circle">7</div>
                 <div class="step-label">Reporte enviado</div>
             </div>
@@ -297,7 +313,7 @@
             <form action="upload-servlet" method="post" enctype="multipart/form-data">
                 <div class="upload-area" id="uploadArea">
                     <i class="fas fa-cloud-upload-alt"></i>
-                    <h4>Arrastra archivos aquí o selecciona</h4>
+                    <h4>Arrastra archivos aquí o <span class="text-primary text-decoration-underline">selecciona</span></h4>
                     <p>Formatos aceptados: PNG, JPG, WEBP, PDF</p>
                     <p>Máx. 10 MB por archivo</p>
                     <input type="file" id="fileInput" name="archivo" class="d-none" multiple accept=".png,.jpg,.jpeg,.webp,.pdf">
@@ -310,9 +326,9 @@
             </form>
         </div>
 
-        <!-- Tabla de documentos -->
+        <!-- Tabla de documentos (Directa, sin botones de tipo) -->
         <div class="documents-table">
-            <h3 class="section-title">Documentos subidos</h3>
+            <h3 class="section-title mb-3">Documentos subidos</h3>
             <table class="table">
                 <thead>
                 <tr>
@@ -326,10 +342,10 @@
                 </thead>
                 <tbody>
                 <tr>
-                    <td>Solicitud</td>
+                    <td><i class="fas fa-file-alt me-2"></i>Solicitud</td>
                     <td>solicitud_visita.pdf</td>
                     <td>69.7 KB</td>
-                    <td>24/09/2026<br><small>18:23 p.m.</small></td>
+                    <td>24/09/2026, 18:23 p.m.</td>
                     <td><span class="badge badge-draft">Borrador</span></td>
                     <td>
                         <button class="action-btn" title="Ver"><i class="fas fa-eye"></i></button>
@@ -338,10 +354,10 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Carta responsiva</td>
+                    <td><i class="fas fa-file-alt me-2"></i>Carta responsiva</td>
                     <td>carta_responsiva.pdf</td>
                     <td>69.7 KB</td>
-                    <td>24/09/2026<br><small>18:23 p.m.</small></td>
+                    <td>24/09/2026, 18:23 p.m.</td>
                     <td><span class="badge badge-draft">Borrador</span></td>
                     <td>
                         <button class="action-btn" title="Ver"><i class="fas fa-eye"></i></button>
@@ -350,10 +366,10 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Reporte</td>
+                    <td><i class="fas fa-file-alt me-2"></i>Reporte</td>
                     <td>reporte_visita.pdf</td>
                     <td>69.7 KB</td>
-                    <td>24/09/2026<br><small>18:23 p.m.</small></td>
+                    <td>24/09/2026, 18:23 p.m.</td>
                     <td><span class="badge badge-draft">Borrador</span></td>
                     <td>
                         <button class="action-btn" title="Ver"><i class="fas fa-eye"></i></button>
@@ -364,12 +380,15 @@
                 </tbody>
             </table>
 
+            <!-- Botones de Navegación -->
             <div class="navigation-buttons">
-                <button class="btn btn-secondary-custom btn-custom">
-                    <i class="fas fa-arrow-left me-2"></i>Anterior
-                </button>
-                <button class="btn btn-primary-custom btn-custom">
-                    Subir<i class="fas fa-arrow-right ms-2"></i>
+                <!-- Regresa al inicio -->
+                <a href="index.jsp" class="btn btn-orange btn-custom">
+                    Anterior
+                </a>
+                <!-- Botón Subir en Naranja sin funcionalidad extra -->
+                <button type="button" class="btn btn-primary-custom btn-custom">
+                    Subir
                 </button>
             </div>
         </div>
@@ -410,7 +429,6 @@
     function handleFiles(files) {
         Array.from(files).forEach(file => {
             console.log('Archivo seleccionado:', file.name);
-            // Aquí puedes agregar lógica para mostrar los archivos seleccionados
         });
     }
 </script>

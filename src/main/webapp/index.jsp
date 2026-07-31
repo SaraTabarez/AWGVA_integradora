@@ -5,7 +5,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio - Sistema de Gestión de Visitas Académicas</title>
+    <title>Inicio - AWGVA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,204 +16,192 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f7fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #ffffff;
+            min-height: 100vh;
         }
 
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
-            color: white;
-            padding: 20px 40px;
+        /* Espaciado para dar lugar al sidebar fijo (240px) */
+        .main-layout {
+            margin-left: 240px;
+            padding: 3rem 3.5rem;
+            min-height: 100vh;
+            background-color: #ffffff;
+        }
+
+        /* Encabezado superior */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2.5rem;
+        }
+
+        .page-title {
+            color: #1e3a5f;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .page-subtitle {
+            color: #f38218;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+        }
+
+        /* Botón Nueva Solicitud */
+        .btn-new-request {
+            background-color: #f38218;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.6rem 1.6rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(243, 130, 24, 0.2);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .btn-new-request:hover {
+            background-color: #d9700f;
+            color: #ffffff;
+        }
+
+        /* Grid de Tarjetas de Solicitud */
+        .requests-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 320px));
+            gap: 2rem;
+        }
+
+        /* Estilo de la tarjeta de la visita */
+        .request-card {
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            padding: 12px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .request-card:hover {
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+        }
+
+        .request-card .card-img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .request-card .card-company {
+            color: #1e3a5f;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .request-card .card-footer-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 8px;
         }
 
-        .logo {
-            font-size: 32px;
-            font-weight: bold;
-            letter-spacing: 3px;
+        .request-card .card-id {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 500;
         }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .user-name {
-            font-size: 16px;
-        }
-
-        .btn-logout {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+        /* Botón Detalles */
+        .btn-details {
+            border: 1px solid #f38218;
+            color: #f38218;
+            background-color: transparent;
             border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-
-        .btn-logout:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Contenido principal */
-        .main-content {
-            padding: 60px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .welcome-section {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
-        }
-
-        .welcome-title {
-            font-size: 28px;
-            color: #1a365d;
-            margin-bottom: 10px;
-        }
-
-        .welcome-text {
-            color: #718096;
-            font-size: 16px;
-        }
-
-        /* Cards de funcionalidades */
-        .cards-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-
-        .card-title {
-            font-size: 20px;
-            color: #1a365d;
-            margin-bottom: 10px;
+            padding: 0.35rem 1.2rem;
+            font-size: 0.85rem;
             font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
         }
 
-        .card-description {
-            color: #718096;
-            font-size: 14px;
-            line-height: 1.6;
+        .btn-details:hover {
+            background-color: #f38218;
+            color: #ffffff;
         }
     </style>
 </head>
 <body>
-<!-- Header -->
-<div class="header">
-    <div class="logo">AWGVA</div>
-    <div class="user-info">
-        <%
-            Usuario usuario = (Usuario) session.getAttribute("usuario");
-            String nombreUsuario = (String) session.getAttribute("nombreUsuario");
-            if (nombreUsuario == null && usuario != null) {
-                nombreUsuario = usuario.getNombreCompleto();
-            }
-        %>
-        <span class="user-name">
-                Bienvenido, <%= nombreUsuario != null ? nombreUsuario : "Usuario" %>
-            </span>
-        <form action="logout" method="POST" style="display: inline;">
-            <button type="submit" class="btn-logout">Cerrar Sesión</button>
-        </form>
-    </div>
-</div>
 
-<!-- Contenido principal -->
-<div class="main-content">
-    <div class="welcome-section">
-        <h1 class="welcome-title">Sistema de Gestión de Visitas Académicas</h1>
-        <p class="welcome-text">
-            Bienvenido al sistema de gestión de visitas académicas de la UTEZ.
-            Desde aquí podrás administrar las solicitudes de visitas, gestionar usuarios
-            y dar seguimiento a los formatos de visitas académicas.
-        </p>
-    </div>
+<%
+    // Lógica para rescatar la sesión guardada
+    Usuario usuario = (Usuario) session.getAttribute("usuario");
+    String nombreUsuario = (String) session.getAttribute("nombreUsuario");
+    if (nombreUsuario == null && usuario != null) {
+        nombreUsuario = usuario.getNombreCompleto();
+    }
+%>
 
-    <div class="cards-container">
-        <div class="card">
-            <div class="card-icon">📋</div>
-            <h3 class="card-title">Solicitudes de Visita</h3>
-            <p class="card-description">
-                Gestiona las solicitudes de visitas académicas. Crea, aprueba o rechaza
-                solicitudes de visita a empresas.
-            </p>
+<!-- Inclusión de tu Sidebar dinámico -->
+<jsp:include page="Layout/sidebar.jsp"/>
+
+<!-- Contenido Principal -->
+<main class="main-layout">
+
+    <!-- Encabezado con título y botón de acción -->
+    <div class="top-header">
+        <div>
+            <h1 class="page-title">Inicio</h1>
+            <div class="page-subtitle">Mis solicitudes</div>
         </div>
-
-        <div class="card">
-            <div class="card-icon">👥</div>
-            <h3 class="card-title">Gestión de Usuarios</h3>
-            <p class="card-description">
-                Administra los usuarios del sistema. Asigna roles y permisos según
-                las necesidades de cada división.
-            </p>
-        </div>
-
-        <div class="card">
-            <div class="card-icon">🏢</div>
-            <h3 class="card-title">Empresas</h3>
-            <p class="card-description">
-                Mantén el catálogo de empresas visitadas. Registra la información
-                de contacto y detalles de cada empresa.
-            </p>
-        </div>
-
-        <div class="card">
-            <div class="card-icon">📊</div>
-            <h3 class="card-title">Reportes</h3>
-            <p class="card-description">
-                Consulta reportes y estadísticas sobre las visitas académicas
-                realizadas y su estado actual.
-            </p>
-        </div>
-
-        <div class="card">
-            <div class="card-icon">📁</div>
-            <h3 class="card-title">Documentos</h3>
-            <p class="card-description">
-                Gestiona los documentos relacionados con las visitas académicas.
-                Sube y descarga formatos y archivos.
-            </p>
-        </div>
-
-        <div class="card">
-            <div class="card-icon">⚙️</div>
-            <h3 class="card-title">Configuración</h3>
-            <p class="card-description">
-                Configura los parámetros del sistema. Define divisiones, roles
-                y otras configuraciones generales.
-            </p>
+        <div>
+            <a href="nueva-solicitud.jsp" class="btn-new-request">
+                <i class="bi bi-plus-circle"></i>
+                Nueva solicitud
+            </a>
         </div>
     </div>
-</div>
+
+    <!-- Contenedor/Grid con las tarjetas de solicitudes -->
+    <div class="requests-grid">
+
+        <!-- Tarjeta de Ejemplo (Nissan, Cuernavaca) -->
+        <div class="request-card">
+            <!-- Foto de la empresa -->
+            <img src="https://images.unsplash.com/photo-1563720223185-11003d516935?q=80&w=600&auto=format&fit=crop" alt="Nissan" class="card-img">
+
+            <div class="card-company">
+                Nissan, Cuernavaca <i class="bi bi-geo-alt" style="font-size: 0.95rem; color: #1e3a5f;"></i>
+            </div>
+
+            <div class="card-footer-info">
+                <span class="card-id">ID:001</span>
+                <a href="#" class="btn-details">
+                    <i class="bi bi-eye"></i> Detalles
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
 </body>
 </html>
