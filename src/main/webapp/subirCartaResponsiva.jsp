@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
-    // Recuperar el índice de la solicitud para volver al detalle correcto
+    // Recuperar el índice de la solicitud
     String indexParam = request.getParameter("index");
     int indexNum = 0;
     if (indexParam != null) {
@@ -16,7 +16,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vista Docente - Gestión de Documentos</title>
+    <title>Subir Carta Responsiva - Docente</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -35,8 +35,10 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-body); height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+
         .app-window { display: flex; width: 100%; max-width: 1280px; height: 90vh; background-color: var(--bg-main); border-radius: 8px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.15); position: relative; }
 
+        /* Sidebar */
         .sidebar { width: 260px; background-color: var(--bg-sidebar); color: white; display: flex; flex-direction: column; padding: 2.5rem 0; flex-shrink: 0; }
         .user-profile { text-align: center; margin-bottom: 3rem; }
         .user-profile i { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
@@ -47,10 +49,12 @@
         .sidebar-footer { padding: 1rem 2rem; margin-top: auto; }
         .logout-btn { display: flex; align-items: center; gap: 15px; color: white; text-decoration: none; font-weight: 600; font-size: 0.95rem; }
 
+        /* Main Content */
         .main-content { flex-grow: 1; padding: 2.5rem 4rem; display: flex; flex-direction: column; position: relative; overflow-y: auto; }
         .close-btn { position: absolute; top: 1.5rem; right: 1.5rem; font-size: 1.2rem; color: var(--color-text-muted); cursor: pointer; border: none; background: none; }
         .close-btn:hover { color: #ef4444; }
 
+        /* Stepper */
         .stepper-container { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; position: relative; padding: 0 1rem; }
         .step { display: flex; flex-direction: column; align-items: center; z-index: 2; width: 80px; position: relative; }
         .step-icon { width: 40px; height: 40px; border-radius: 50%; background-color: #d1d5db; color: white; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; margin-bottom: 0.5rem; }
@@ -68,7 +72,7 @@
         .dropzone-text { font-size: 0.95rem; color: var(--color-text-dark); font-weight: 600; margin-bottom: 0.4rem; }
         .dropzone-text span { color: #047857; text-decoration: underline; }
 
-        .table-container { margin-bottom: auto; overflow-x: auto; display: none; } /* Oculto inicialmente */
+        .table-container { margin-bottom: auto; overflow-x: auto; display: none; }
         .doc-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; }
         .doc-table th { background-color: var(--bg-sidebar); color: white; padding: 12px 15px; text-align: left; font-size: 0.85rem; font-weight: 600; }
         .doc-table td { padding: 15px; border-bottom: 1px solid var(--color-border); font-size: 0.9rem; color: var(--color-text-dark); font-weight: 600; vertical-align: middle; }
@@ -86,7 +90,6 @@
 <body>
 
 <div class="app-window">
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="user-profile">
             <i class="fa-solid fa-circle-user"></i>
@@ -103,38 +106,38 @@
         </div>
     </aside>
 
-    <!-- Contenido Principal -->
     <main class="main-content">
-        <!-- BOTÓN X: Redirige a solicitud-detalle.jsp con el índice -->
+        <!-- Botón X para salir sin subir nada -->
         <button type="button" class="close-btn" onclick="volverADetalle()"><i class="fa-solid fa-xmark"></i></button>
 
-        <!-- Stepper -->
+        <!-- STEPPER CORREGIDO: Únicamente los primeros 4 están activos -->
         <div class="stepper-container">
             <div class="stepper-line"></div>
             <div class="step active"><div class="step-icon"><i class="fa-regular fa-file-lines"></i></div><div class="step-label">Solicitud<br>creada</div></div>
-            <div class="step" id="step2"><div class="step-icon"><i class="fa-solid fa-file-export"></i></div><div class="step-label">Solicitud<br>enviada</div></div>
-            <div class="step"><div class="step-icon"><i class="fa-solid fa-file-circle-check"></i></div><div class="step-label">Solicitud<br>aceptada</div></div>
-            <div class="step"><div class="step-icon"><i class="fa-solid fa-file-signature"></i></div><div class="step-label">Carta<br>responsiva</div></div>
+            <div class="step active"><div class="step-icon"><i class="fa-solid fa-file-export"></i></div><div class="step-label">Solicitud<br>enviada</div></div>
+            <div class="step active"><div class="step-icon"><i class="fa-solid fa-file-circle-check"></i></div><div class="step-label">Solicitud<br>aceptada</div></div>
+            <div class="step active"><div class="step-icon"><i class="fa-solid fa-file-signature"></i></div><div class="step-label">Carta<br>responsiva</div></div>
+
+            <!-- Paso 5: Carta aceptada (EN GRIS) -->
             <div class="step"><div class="step-icon"><i class="fa-solid fa-file-circle-check"></i></div><div class="step-label">Carta<br>aceptada</div></div>
+
             <div class="step"><div class="step-icon"><i class="fa-solid fa-bus"></i></div><div class="step-label">Visita en<br>curso</div></div>
             <div class="step"><div class="step-icon"><i class="fa-solid fa-clipboard-list"></i></div><div class="step-label">Reporte<br>enviado</div></div>
             <div class="step"><div class="step-icon"><i class="fa-solid fa-clipboard-check"></i></div><div class="step-label">Reporte<br>aceptado</div></div>
             <div class="step"><div class="step-icon"><i class="fa-solid fa-circle-check"></i></div><div class="step-label">Visita<br>concretada</div></div>
         </div>
 
-        <!-- Upload Info -->
         <div class="upload-header">
             <div class="upload-title">
                 <h2>Imágenes y Documentos</h2>
                 <p>Adjunta imágenes (PNG, JPG, WEBP) y documentos (PDF)</p>
             </div>
             <div class="upload-stats">
-                <strong id="files-count">0 de 10 archivos</strong>
+                <strong id="files-count">0 de 5 archivos</strong>
                 <p id="files-size">0 Bytes de 100 MB</p>
             </div>
         </div>
 
-        <!-- Dropzone y Selector de Archivo de HTML real -->
         <input type="file" id="real-file-input" accept=".pdf,.png,.jpg,.jpeg,.webp" style="display: none;">
 
         <div class="dropzone" id="dropzone-area">
@@ -143,7 +146,6 @@
             <p class="dropzone-hint">PNG, JPG, WEBP, PDF • Máx. 10 MB por archivo</p>
         </div>
 
-        <!-- Tabla de Documentos (Oculta hasta seleccionar archivo) -->
         <div class="table-container" id="table-container">
             <table class="doc-table">
                 <thead>
@@ -159,7 +161,7 @@
                 <tbody>
                 <tr>
                     <td class="td-icon" id="doc-type-icon"><i class="fa-regular fa-file-pdf"></i></td>
-                    <td id="doc-name">NombreArchivo.pdf</td>
+                    <td id="doc-name">Carta_Responsiva_Firmada.pdf</td>
                     <td id="doc-size">0 KB</td>
                     <td id="doc-date">--/--/----</td>
                     <td><span class="badge-status">Borrador</span></td>
@@ -175,10 +177,9 @@
             </table>
         </div>
 
-        <!-- Formulario para enviar al Servlet -->
-        <form id="uploadForm" action="subir-documento" method="POST">
+        <form id="uploadForm" action="cartaEnviadaExito.jsp?index=<%= indexNum %>" method="POST">
             <footer class="action-buttons">
-                <!-- BOTÓN ANTERIOR: Redirige a solicitud-detalle.jsp con el índice -->
+                <!-- Botón Anterior para salir sin subir nada -->
                 <button type="button" class="btn-action" onclick="volverADetalle()">Anterior</button>
                 <button type="submit" class="btn-action" id="btn-enviar" disabled>Enviar</button>
             </footer>
@@ -186,22 +187,17 @@
     </main>
 </div>
 
-<!-- Script de Comportamiento Dinámico -->
 <script>
     const fileInput = document.getElementById('real-file-input');
-    const dropzone = document.getElementById('dropzone-area');
     const tableContainer = document.getElementById('table-container');
     const btnEnviar = document.getElementById('btn-enviar');
-    const step2 = document.getElementById('step2');
 
     let archivoSeleccionado = null;
 
-    // Redirección a la vista de detalles respetando el índice actual
     function volverADetalle() {
         window.location.href = 'solicitud-detalle.jsp?index=<%= indexNum %>';
     }
 
-    // Escuchar el cambio en el selector de archivos
     fileInput.addEventListener('change', function(e) {
         if (this.files && this.files[0]) {
             archivoSeleccionado = this.files[0];
@@ -210,20 +206,16 @@
     });
 
     function cargarInformacionArchivo(file) {
-        // 1. Nombre real
         document.getElementById('doc-name').textContent = file.name;
 
-        // 2. Tamaño real formateado
         const sizeInKB = (file.size / 1024).toFixed(1);
         const sizeFormatted = sizeInKB > 1024 ? (sizeInKB / 1024).toFixed(2) + ' MB' : sizeInKB + ' KB';
         document.getElementById('doc-size').textContent = sizeFormatted;
 
-        // 3. Fecha real del momento de subida
         const ahora = new Date();
         const fechaFormatted = ahora.toLocaleDateString() + ', ' + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         document.getElementById('doc-date').textContent = fechaFormatted;
 
-        // 4. Ícono según extensión
         const ext = file.name.split('.').pop().toLowerCase();
         const iconElement = document.getElementById('doc-type-icon');
         if (ext === 'pdf') {
@@ -232,29 +224,25 @@
             iconElement.innerHTML = '<i class="fa-regular fa-file-image" style="color: #2563eb;"></i>';
         }
 
-        // 5. Actualizar Estadísticas
         document.getElementById('files-count').textContent = '1 de 5 archivos';
         document.getElementById('files-size').textContent = sizeFormatted + ' de 100 MB';
 
-        // 6. Mostrar tabla, activar stepper y habilitar botón Enviar
         tableContainer.style.display = 'block';
-        step2.classList.add('active');
+
+        // Habilitar únicamente el botón enviar, SIN modificar los pasos del Stepper
         btnEnviar.disabled = false;
     }
 
-    // ACCIÓN: Eliminar archivo
     function eliminarArchivo() {
         fileInput.value = '';
         archivoSeleccionado = null;
         tableContainer.style.display = 'none';
-        step2.classList.remove('active');
         btnEnviar.disabled = true;
 
-        document.getElementById('files-count').textContent = '0 de 10 archivos';
+        document.getElementById('files-count').textContent = '0 de 5 archivos';
         document.getElementById('files-size').textContent = '0 Bytes de 100 MB';
     }
 
-    // ACCIÓN: Ojito (Ver archivo previa)
     function verArchivo() {
         if (archivoSeleccionado) {
             const fileURL = URL.createObjectURL(archivoSeleccionado);
@@ -262,7 +250,6 @@
         }
     }
 
-    // ACCIÓN: Descargar archivo real
     function descargarArchivo() {
         if (archivoSeleccionado) {
             const a = document.createElement('a');

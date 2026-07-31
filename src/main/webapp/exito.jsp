@@ -1,4 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    // Recuperamos el índice por si viene de la vista previa para no perder la solicitud activa
+    String indexParam = request.getParameter("index");
+    String urlDetalle = "solicitud-detalle.jsp";
+    if (indexParam != null && !indexParam.trim().isEmpty()) {
+        urlDetalle += "?index=" + indexParam;
+    }
+%>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -86,8 +94,9 @@
         La solicitud ha sido enviado correctamente.<br>
         Espere la respuesta del departamento al que ha sido enviado
     </p>
-    <!-- Regresa a la pantalla de subir documento o inicio -->
-    <a href="subirDocumento.jsp" class="understood-button">Entendido</a>
+
+    <!-- Redirección directa a la pantalla de detalles -->
+    <a href="<%= urlDetalle %>" class="understood-button">Entendido</a>
 </div>
 </body>
 </html>

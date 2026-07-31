@@ -7,6 +7,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @WebServlet("/solicitud")
 public class SolicitudServlet extends HttpServlet {
@@ -17,7 +19,6 @@ public class SolicitudServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
 
-        // 1. Mapear parámetros del formulario en un objeto SolicitudVisita
         SolicitudVisita sol = new SolicitudVisita();
         sol.setSolicitanteNombre(req.getParameter("solicitanteNombre"));
         sol.setSolicitanteCargo(req.getParameter("solicitanteCargo"));
@@ -38,11 +39,19 @@ public class SolicitudServlet extends HttpServlet {
         sol.setTotalEstudiantes(req.getParameter("totalEstudiantes"));
         sol.setAsignaturas(req.getParameter("asignaturas"));
 
-        // 2. Procesar/Guardar con el Service
         service.procesarSolicitud(sol);
 
-        // 3. Pasar el objeto cargado a la vista 'resumen.jsp'
-        req.setAttribute("solicitud", sol);
-        req.getRequestDispatcher("resumen.jsp").forward(req, resp);
+        HttpSession session = req.getSession();
+        List<SolicitudVisita> listaSolicitudes = (List<SolicitudVisita>) session.getAttribute("listaSolicitudes");
+
+        if (listaSolicitudes == null) {
+            listaSolicitudes = new ArrayList<>();
+        }
+        listaSolicitudes.add(sol);
+        session.setAttribute("listaSolicitudes", listaSolicitudes);
+
+        int nuevoIndex = listaSolicitudes.size() - 1;
+        // REDIRIGE A LA HOJA DE VISTA PREVIA
+        resp.sendRedirect("solicitud-previa.jsp?index=" + nuevoIndex);
     }
 }

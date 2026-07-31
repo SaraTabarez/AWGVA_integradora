@@ -1,4 +1,16 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    // Recuperar el índice de la solicitud para mantener la navegación
+    String indexParam = request.getParameter("index");
+    int indexNum = 0;
+    if (indexParam != null) {
+        try {
+            indexNum = Integer.parseInt(indexParam);
+        } catch (NumberFormatException e) {
+            indexNum = 0;
+        }
+    }
+%>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -170,7 +182,7 @@
 
 <div class="document-container" id="pdfContent">
     <!-- X Cerrar (Oculto al descargar) -->
-    <div class="close-btn no-print">&#x2715;</div>
+    <div class="close-btn no-print" id="btnClose">&#x2715;</div>
 
     <!-- Descargar para Continuar (Oculto al descargar) -->
     <div class="download-section no-print" id="btnDescargar">
@@ -210,7 +222,7 @@
 
     <ul class="bullet-list">
         <li>Respetar las reglas impuestas tanto por la UTEZ, como por los organizadores de la salida.</li>
-        <li>Buscar siempre estar informado de las actividades grupales programadas.</li>
+        <li>Buscar siempre estar informedo de las actividades grupales programadas.</li>
         <li>Abstenerme de cualquier conducta ilegal o inapropiada que pueda denigrar la buena imagen de la UTEZ o que sea perjudicial para sus objetivos y;</li>
         <li>No poner en riesgo mi integridad física ni la de mis compañeros.</li>
     </ul>
@@ -257,14 +269,20 @@
 
 </div>
 
-<!-- SCRIPT JS -->
-<!-- SCRIPT JS CORREGIDO -->
-<!-- SCRIPT JS CORREGIDO PARA ARCHIVOS JSP -->
+<!-- SCRIPT JS CORREGIDO CON REDIRECCIÓN -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const btnAgregarFila = document.getElementById('btnAgregarFila');
         const btnDescargar = document.getElementById('btnDescargar');
+        const btnClose = document.getElementById('btnClose');
         const tbody = document.querySelector('#alumnosTable tbody');
+
+        // Botón X (cerrar sin descargar) -> regresa a la vista de detalle
+        if (btnClose) {
+            btnClose.addEventListener('click', function() {
+                window.location.href = 'solicitud-detalle.jsp?index=<%= indexNum %>';
+            });
+        }
 
         // 1. Agregar filas concatenando cadenas (compatible con JSP)
         btnAgregarFila.addEventListener('click', function() {
@@ -280,7 +298,7 @@
             tbody.appendChild(nuevaFila);
         });
 
-        // 2. Generar y descargar PDF al dar clic en 'Descargar para Continuar'
+        // 2. Generar, descargar PDF y REDIRIGIR a los detalles con bandera activada
         btnDescargar.addEventListener('click', function() {
             const elemento = document.getElementById('pdfContent');
 
@@ -296,10 +314,13 @@
                 jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
             };
 
-            // Generar PDF y descargarlo
-            html2pdf().set(opciones).from(elemento).save().then(() => {
-                // Volver a mostrar los botones en la pantalla tras la descarga
+            // Generar PDF, descargarlo y LUEGO redirigir a los detalles
+            html2pdf().set(opciones).from(elemento).save().then(function() {
+                // Volver a mostrar elementos por si acaso
                 elementosOcultar.forEach(el => el.style.display = '');
+
+                // REDIRECCIÓN AUTOMÁTICA a detalles notificando que ya se descargó
+                window.location.href = 'solicitud-detalle.jsp?index=<%= indexNum %>&cartaDescargada=true';
             });
         });
     });

@@ -128,7 +128,8 @@
                     </a>
                 </li>
                 <li>
-                    <a href="nueva-solicitud.jsp" class="${pageContext.request.requestURI.endsWith('nueva-solicitud.jsp') ? 'active' : ''}">
+                    <!-- Se corrigió para que dirija a solicitud.jsp en lugar del formulario -->
+                    <a href="solicitud.jsp" class="${pageContext.request.requestURI.endsWith('solicitud.jsp') ? 'active' : ''}">
                         <i class="bi bi-file-earmark-text"></i>
                         Solicitud
                     </a>
