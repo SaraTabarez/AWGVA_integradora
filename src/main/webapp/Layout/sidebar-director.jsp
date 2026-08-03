@@ -1,3 +1,10 @@
+<%--
+  Created by IntelliJ IDEA.
+  User: pc
+  Date: 03/08/2026
+  Time: 06:05 a. m.
+  To change this template use File | Settings | File Templates.
+--%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
@@ -117,7 +124,7 @@
             <div class="avatar">
                 <i class="bi bi-person"></i>
             </div>
-            <div class="username">DOCENTE</div>
+            <div class="username">DIRECTOR</div>
         </div>
         <nav>
             <ul>
@@ -143,13 +150,6 @@
                     <a href="historico-docente.jsp" class="${pageContext.request.requestURI.endsWith('historico-docente.jsp') ? 'active' : ''}">
                         <i class="bi bi-clock-history"></i>
                         <span>Histórico</span>
-                    </a>
-                </li>
-                <!-- Nuevo botón de Usuarios -->
-                <li>
-                    <a href="GestionUsuariosServlet" class="${pageContext.request.requestURI.contains('GestionUsuariosServlet') || pageContext.request.requestURI.endsWith('gestion-usuarios.jsp') ? 'active' : ''}">
-                        <i class="bi bi-people"></i>
-                        <span>Usuarios</span>
                     </a>
                 </li>
             </ul>

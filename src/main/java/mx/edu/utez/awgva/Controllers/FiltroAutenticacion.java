@@ -23,34 +23,34 @@ public class FiltroAutenticacion extends HttpFilter {
 
         boolean loggedIn = (session != null && session.getAttribute("usuario") != null);
 
-        boolean isPublicPath =
-                path.equals("/") ||
-                        path.equals("/login.jsp") ||
-                        path.equals("/login") ||
-                        path.equals("/recuperar-contra.jsp") ||
-                        path.equals("/reset-password") ||
-                        path.equals("/nueva-solicitud.jsp") ||
-                        path.equals("/subir-docs.jsp") ||
-                        path.equals("/index.jsp") ||
-                        path.equals("/assets/") ||
-                        path.startsWith("/assets/") ||
-                        path.startsWith("/layout/") ||
-                        path.startsWith("/uploads/") ||
-                        path.endsWith(".css") ||
-                        path.endsWith(".js") ||
-                        path.endsWith(".png") ||
-                        path.endsWith(".jpg") ||
-                        path.endsWith(".jpeg") ||
-                        path.endsWith(".gif") ||
-                        path.endsWith(".ico");
+        // Rutas públicas que no requieren autenticación
+        boolean isPublicPath = path.equals("/") ||
+                path.equals("/login.jsp") ||
+                path.equals("/login") ||
+                path.equals("/logout") ||
+                path.equals("/recuperar-contra.jsp") ||
+                path.equals("/reset-password") ||
+                path.startsWith("/assets/") ||
+                path.startsWith("/Layout/") ||
+                path.startsWith("/layout/") ||
+                path.endsWith(".css") ||
+                path.endsWith(".js") ||
+                path.endsWith(".png") ||
+                path.endsWith(".jpg") ||
+                path.endsWith(".jpeg") ||
+                path.endsWith(".gif") ||
+                path.endsWith(".ico") ||
+                path.endsWith(".html");
 
         if (loggedIn) {
+            // Si está logueado y trata de acceder a login, redirigir al index
             if (path.equals("/") || path.equals("/login.jsp") || path.equals("/login") || path.equals("/recuperar-contra.jsp")) {
                 response.sendRedirect(contextPath + "/index.jsp");
             } else {
                 chain.doFilter(request, response);
             }
         } else {
+            // Si no está logueado, permitir acceso solo a rutas públicas
             if (isPublicPath) {
                 chain.doFilter(request, response);
             } else {

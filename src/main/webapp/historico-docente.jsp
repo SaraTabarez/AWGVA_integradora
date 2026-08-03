@@ -11,116 +11,113 @@
     <!-- Integración de Flatpickr (Calendario) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .sidebar { background-color: #1a2a40; min-height: 100vh; color: white; padding-top: 2rem; }
-        .sidebar-link { color: white; text-decoration: none; display: block; padding: 10px 20px; margin-bottom: 5px; cursor: pointer; }
-        .sidebar-link:hover { background-color: #2c3e50; color: #f39c12; }
-        .sidebar-link.active { color: #f39c12; font-weight: bold; }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Ajuste para despejar la sidebar fija (ancho 240px) */
+        .main-layout {
+            margin-left: 240px;
+            padding: 2.5rem 3rem;
+            min-height: 100vh;
+        }
+
         .table-header-dark { background-color: #2b2d42; color: white; }
         .btn-custom-dark { background-color: #2b2d42; color: white; border: none; }
         .btn-custom-dark:hover { background-color: #1a1b26; color: white; }
         .page-item.active .page-link { background-color: #f39c12; border-color: #f39c12; }
         .page-link { color: #6c757d; }
-        /* Estilo para que el ícono parezca clickeable */
         .date-icon { cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                margin-left: 0;
+                padding: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <!-- Menú Lateral -->
-        <nav class="col-md-2 d-none d-md-block sidebar text-center position-relative">
-            <div class="mb-4">
-                <i class="bi bi-person-circle display-4"></i>
-                <h6 class="mt-2 fw-bold">DOCENTE</h6>
-            </div>
-            <div class="text-start px-3">
-                <a class="sidebar-link" onclick="navegarMenu('Inicio')"><i class="bi bi-house-door me-2"></i> Inicio</a>
-                <a class="sidebar-link" onclick="navegarMenu('Solicitud')"><i class="bi bi-file-earmark-text me-2"></i> Solicitud</a>
-                <a class="sidebar-link" onclick="navegarMenu('Reporte')"><i class="bi bi-bar-chart me-2"></i> Reporte</a>
-                <a class="sidebar-link active" onclick="navegarMenu('Histórico')"><i class="bi bi-clock-history me-2"></i> Histórico</a>
-            </div>
-            <div class="position-absolute bottom-0 start-0 w-100 p-3 text-start">
-                <a class="sidebar-link text-white" onclick="cerrarSesion()"><i class="bi bi-box-arrow-left me-2"></i> Cerrar sesión</a>
-            </div>
-        </nav>
 
-        <!-- Contenido Principal -->
-        <main class="col-md-10 px-md-4 pt-4">
-            <h3 class="mb-4 fw-bold" style="color: #2b2d42;">HISTORIAL DE SOLICITUDES</h3>
+<!-- Menú lateral importado directamente (posición fija) -->
+<jsp:include page="Layout/sidebar.jsp"/>
 
-            <!-- Filtros -->
-            <div class="row mb-4 align-items-end">
-                <div class="col-md-5">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                        <input type="text" id="busqueda-docente" class="form-control" placeholder="Buscar por ID, Lugar....">
-                    </div>
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label fw-bold small">Fecha:</label>
-                    <!-- Estructura de Calendario actualizada -->
-                    <div class="input-group">
-                        <input type="text" class="form-control date-picker" placeholder="Desde" id="fecha-desde-docente">
-                        <span class="input-group-text bg-white date-icon" onclick="document.getElementById('fecha-desde-docente')._flatpickr.open()"><i class="bi bi-calendar3"></i></span>
+<!-- Contenido Principal Desplazado -->
+<main class="main-layout">
+    <h3 class="mb-4 fw-bold" style="color: #2b2d42;">HISTORIAL DE SOLICITUDES</h3>
 
-                        <input type="text" class="form-control date-picker" placeholder="Hasta" id="fecha-hasta-docente">
-                        <span class="input-group-text bg-white date-icon" onclick="document.getElementById('fecha-hasta-docente')._flatpickr.open()"><i class="bi bi-calendar3"></i></span>
-                    </div>
-                </div>
-                <div class="col-md-2 text-end">
-                    <button type="button" class="btn btn-custom-dark w-100" onclick="limpiarFiltrosDocente()">LIMPIAR FILTROS</button>
-                </div>
+    <!-- Filtros -->
+    <div class="row mb-4 align-items-end g-3">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input type="text" id="busqueda-docente" class="form-control" placeholder="Buscar por ID, Lugar....">
             </div>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label fw-bold small">Fecha:</label>
+            <div class="input-group">
+                <input type="text" class="form-control date-picker" placeholder="Desde" id="fecha-desde-docente">
+                <span class="input-group-text bg-white date-icon" onclick="document.getElementById('fecha-desde-docente')._flatpickr.open()"><i class="bi bi-calendar3"></i></span>
 
-            <!-- Tabla -->
-            <div class="table-responsive">
-                <table class="table table-hover align-middle text-center">
-                    <thead class="table-header-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>EMPRESA</th>
-                        <th>LUGAR</th>
-                        <th>FECHA</th>
-                        <th>CARRERA</th>
-                        <th>GRUPO</th>
-                        <th>ACCIONES</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr id="fila-1010">
-                        <td>1010</td><td>NISSAN</td><td>MORELOS</td><td>25-08-26</td><td>INGENIERÍA MECATRÓNICA</td><td>6°B</td>
-                        <td><button class="btn btn-custom-dark btn-sm px-4" onclick="verDetalle('1010')"><i class="bi bi-eye"></i></button></td>
-                    </tr>
-                    <tr id="fila-1011">
-                        <td>1011</td><td>ORACLE</td><td>MORELOS</td><td>30-07-26</td><td>INGENIERÍA INDUSTRIAL</td><td>6°A</td>
-                        <td><button class="btn btn-custom-dark btn-sm px-4" onclick="verDetalle('1011')"><i class="bi bi-eye"></i></button></td>
-                    </tr>
-                    <tr id="fila-1012">
-                        <td>1012</td><td>BIMBO</td><td>TOLUCA</td><td>28-07-26</td><td>INGENIERÍA SISTEMAS</td><td>6°B</td>
-                        <td><button class="btn btn-custom-dark btn-sm px-4" onclick="verDetalle('1012')"><i class="bi bi-eye"></i></button></td>
-                    </tr>
-                    </tbody>
-                </table>
+                <input type="text" class="form-control date-picker" placeholder="Hasta" id="fecha-hasta-docente">
+                <span class="input-group-text bg-white date-icon" onclick="document.getElementById('fecha-hasta-docente')._flatpickr.open()"><i class="bi bi-calendar3"></i></span>
             </div>
-
-            <!-- Paginación -->
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <nav>
-                    <ul class="pagination mb-0">
-                        <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
-                        <li class="page-item"><a class="page-link" href="#">Siguiente</a></li>
-                    </ul>
-                </nav>
-                <small class="fw-bold">Mostrando 1 de 10 de 125 solicitudes</small>
-            </div>
-        </main>
+        </div>
+        <div class="col-md-2 text-end">
+            <button type="button" class="btn btn-custom-dark w-100" onclick="limpiarFiltrosDocente()">LIMPIAR FILTROS</button>
+        </div>
     </div>
-</div>
+
+    <!-- Tabla -->
+    <div class="table-responsive bg-white rounded shadow-sm p-3">
+        <table class="table table-hover align-middle text-center mb-0">
+            <thead class="table-header-dark">
+            <tr>
+                <th>ID</th>
+                <th>EMPRESA</th>
+                <th>LUGAR</th>
+                <th>FECHA</th>
+                <th>CARRERA</th>
+                <th>GRUPO</th>
+                <th>ACCIONES</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr id="fila-1010">
+                <td>1010</td><td>NISSAN</td><td>MORELOS</td><td>25-08-26</td><td>INGENIERÍA MECATRÓNICA</td><td>6°B</td>
+                <td><button class="btn btn-custom-dark btn-sm px-4" onclick="verDetalle('1010')"><i class="bi bi-eye"></i></button></td>
+            </tr>
+            <tr id="fila-1011">
+                <td>1011</td><td>ORACLE</td><td>MORELOS</td><td>30-07-26</td><td>INGENIERÍA INDUSTRIAL</td><td>6°A</td>
+                <td><button class="btn btn-custom-dark btn-sm px-4" onclick="verDetalle('1011')"><i class="bi bi-eye"></i></button></td>
+            </tr>
+            <tr id="fila-1012">
+                <td>1012</td><td>BIMBO</td><td>TOLUCA</td><td>28-07-26</td><td>INGENIERÍA SISTEMAS</td><td>6°B</td>
+                <td><button class="btn btn-custom-dark btn-sm px-4" onclick="verDetalle('1012')"><i class="bi bi-eye"></i></button></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <nav>
+            <ul class="pagination mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                <li class="page-item"><a class="page-link" href="#">Siguiente</a></li>
+            </ul>
+        </nav>
+        <small class="fw-bold text-secondary">Mostrando 1 de 10 de 125 solicitudes</small>
+    </div>
+</main>
 
 <!-- Modal Dinámico para Detalle de Solicitud -->
 <div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
@@ -163,7 +160,7 @@
 
         filas.forEach(function(fila) {
             let textoFila = fila.textContent.toLowerCase();
-            let fechaFilaTexto = fila.children[3].textContent.trim(); // Columna FECHA
+            let fechaFilaTexto = fila.children[3].textContent.trim();
 
             let coincideTexto = textoFila.includes(texto);
             let coincideFecha = true;
@@ -202,7 +199,7 @@
         filas.forEach(fila => fila.style.display = "");
     }
 
-    // 5. Ver Detalle de la Solicitud (Extrae datos de la fila seleccionada)
+    // 5. Ver Detalle de la Solicitud
     function verDetalle(id) {
         let fila = document.getElementById("fila-" + id);
         let c = fila.children;
@@ -222,18 +219,6 @@
 
         let modal = new bootstrap.Modal(document.getElementById('modalDetalle'));
         modal.show();
-    }
-
-    // 6. Navegación del Menú Lateral
-    function navegarMenu(seccion) {
-        alert("Navegando hacia la sección: " + seccion);
-    }
-
-    // 7. Cerrar Sesión
-    function cerrarSesion() {
-        if(confirm("¿Estás seguro de que deseas cerrar sesión?")) {
-            alert("Sesión cerrada correctamente.");
-        }
     }
 </script>
 </body>

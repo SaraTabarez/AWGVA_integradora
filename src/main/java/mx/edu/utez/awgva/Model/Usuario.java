@@ -1,6 +1,7 @@
 package mx.edu.utez.awgva.Model;
 
 import java.sql.Timestamp;
+
 public class Usuario {
 
     private Long idUsuario;
@@ -17,6 +18,10 @@ public class Usuario {
 
     private String resetToken;
     private Timestamp resetTokenExpiration;
+
+    // Campos auxiliares para la tabla de la vista
+    private String nombreRol;
+    private String nombreDivision;
 
     public Usuario() {
     }
@@ -151,5 +156,44 @@ public class Usuario {
 
     public String getNombreCompleto() {
         return nombres + " " + apellidoPaterno + " " + apellidoMaterno;
+    }
+
+    // ==========================================
+    // GETTERS Y SETTERS AUXILIARES PARA VISTA/SERVLET
+    // ==========================================
+    public String getNombreRol() {
+        return nombreRol;
+    }
+
+    public void setNombreRol(String nombreRol) {
+        this.nombreRol = nombreRol;
+    }
+
+    public String getNombreDivision() {
+        return nombreDivision;
+    }
+
+    public void setNombreDivision(String nombreDivision) {
+        this.nombreDivision = nombreDivision;
+    }
+
+    public Long getIdRol() {
+        return idRolFk;
+    }
+
+    public void setIdRol(Long idRol) {
+        this.idRolFk = idRol;
+    }
+
+    public Long getIdDivision() {
+        return idDivisionFk;
+    }
+
+    public void setIdDivision(Long idDivision) {
+        this.idDivisionFk = idDivision;
+    }
+
+    public void setPassword(String password) {
+        this.passwordHash = password;
     }
 }
