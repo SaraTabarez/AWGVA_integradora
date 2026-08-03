@@ -3,39 +3,72 @@ package mx.edu.utez.awgva;
 import mx.edu.utez.awgva.Utils.DatabaseConnection;
 
 import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 public class TestConnection {
     public static void main(String[] args) {
         System.out.println("==========================================");
-        System.out.println("   PRUEBA DE CONEXIÓN A BASE DE DATOS");
+        System.out.println("   INSERCIÓN DE ROLES Y USUARIOS CLOUD   ");
         System.out.println("==========================================");
 
         Connection conn = null;
         try {
-            System.out.println("\nIntentando conectar a Oracle Database...");
+            System.out.println("\nIntentando conectar a la base de datos...");
             conn = DatabaseConnection.getConnection();
 
             if (conn != null && !conn.isClosed()) {
-                System.out.println("\n✓ ÉXITO: La conexión a la base de datos está activa.");
-                System.out.println("  - Base de datos: Oracle XE");
-                System.out.println("  - Estado: Conectado");
+                Statement stmt = conn.createStatement();
+
+                // 1. Insertar Rol 'ESTADIAS' si no existe y obtener su ID
+                int idRolEstadias = obtenerOCrearRol(stmt, "ESTADIAS");
+
+                // 2. Insertar Rol 'DIRECTOR' si no existe y obtener su ID
+                int idRolDirector = obtenerOCrearRol(stmt, "DIRECTOR");
+
+                // 3. Insertar Usuario de Estadías con su id_rol_fk correspondiente
+                String sqlEstadias = "INSERT INTO usuario (correo, password_hash, nombres, apellido_paterno, apellido_materno, id_rol_fk) " +
+                        "VALUES ('estadias@utez.edu.mx', '123456', 'Encargado', 'Estadias', 'UTEZ', " + idRolEstadias + ")";
+
+                // 4. Insertar Usuario de Director con su id_rol_fk correspondiente
+                String sqlDirector = "INSERT INTO usuario (correo, password_hash, nombres, apellido_paterno, apellido_materno, id_rol_fk) " +
+                        "VALUES ('director@utez.edu.mx', '123456', 'Director', 'General', 'UTEZ', " + idRolDirector + ")";
+
+                System.out.println("Insertando usuario de Estadías (Rol ID " + idRolEstadias + ")...");
+                stmt.executeUpdate(sqlEstadias);
+
+                System.out.println("Insertando usuario de Director (Rol ID " + idRolDirector + ")...");
+                stmt.executeUpdate(sqlDirector);
+
+                System.out.println("\n✓ ¡ÉXITO TOTAL! Los roles y los usuarios han sido creados correctamente en Oracle Cloud.");
             }
 
-        } catch (SQLException e) {
-            System.out.println("\n✗ ERROR: No se pudo establecer la conexión.");
+        } catch (Exception e) {
+            System.out.println("\n✗ ERROR:");
             System.out.println("  - Mensaje: " + e.getMessage());
-            System.out.println("\nPosibles causas:");
-            System.out.println("  1. Oracle XE no está ejecutándose");
-            System.out.println("  2. El servicio OracleListener no está iniciado");
-            System.out.println("  3. Credenciales incorrectas en database.properties");
-            System.out.println("  4. Puerto 1521 bloqueado o incorrecto");
-            System.out.println("  5. El driver ojdbc8 no está en el classpath");
+            e.printStackTrace();
         } finally {
             DatabaseConnection.closeConnection(conn);
             System.out.println("\n==========================================");
-            System.out.println("   FIN DE PRUEBA");
+            System.out.println("   FIN DE PROCESO");
             System.out.println("==========================================");
         }
+    }
+
+    private static int obtenerOCrearRol(Statement stmt, String nombreRol) throws Exception {
+        // Buscar si ya existe
+        ResultSet rs = stmt.executeQuery("SELECT id_rol FROM rol WHERE UPPER(rol) = '" + nombreRol.toUpperCase() + "'");
+        if (rs.next()) {
+            return rs.getInt("id_rol");
+        }
+
+        // Si no existe, crearlo
+        stmt.executeUpdate("INSERT INTO rol (rol) VALUES ('" + nombreRol.toUpperCase() + "')");
+        ResultSet rsNuevo = stmt.executeQuery("SELECT id_rol FROM rol WHERE UPPER(rol) = '" + nombreRol.toUpperCase() + "'");
+        if (rsNuevo.next()) {
+            return rsNuevo.getInt("id_rol");
+        }
+
+        throw new Exception("No se pudo obtener ni crear el rol: " + nombreRol);
     }
 }
