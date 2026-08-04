@@ -1,6 +1,7 @@
 package mx.edu.utez.awgva.Model;
 
 import java.sql.Timestamp;
+import java.util.Optional;
 
 public class Usuario {
 
@@ -155,7 +156,19 @@ public class Usuario {
     }
 
     public String getNombreCompleto() {
-        return nombres + " " + apellidoPaterno + " " + apellidoMaterno;
+        return String.join(" ",
+                valueOrEmpty(nombres),
+                valueOrEmpty(apellidoPaterno),
+                valueOrEmpty(apellidoMaterno)
+        ).replaceAll("\\s+", " ").trim();
+    }
+
+    public Optional<TipoRol> getTipoRol() {
+        return TipoRol.from(nombreRol);
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     // ==========================================

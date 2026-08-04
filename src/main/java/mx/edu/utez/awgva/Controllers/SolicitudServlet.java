@@ -32,6 +32,11 @@ public class SolicitudServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         Usuario usuario = (Usuario) (session != null ? session.getAttribute("usuario") : null);
 
+        if (usuario == null || usuario.getIdDivisionFk() == null) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "El usuario no tiene división asignada.");
+            return;
+        }
+
         // Obtener parámetros del formulario
         String tituloVisita = request.getParameter("tituloVisita");
         String fechaInicio = request.getParameter("fechaInicio");
@@ -67,8 +72,9 @@ public class SolicitudServlet extends HttpServlet {
 
         // Crear objetos del modelo
         Visita visita = new Visita();
-        visita.setIdUsuarioFk(usuario != null ? usuario.getIdUsuario() : 1L); // Temporal: usar ID 1 si no hay sesión
-        visita.setIdDivisionFk(Long.parseLong(division));
+        visita.setIdUsuarioFk(usuario.getIdUsuario());
+        // La división proviene de la sesión autenticada; no se confía en un ID enviado por el navegador.
+        visita.setIdDivisionFk(usuario.getIdDivisionFk());
         visita.setTituloVisita(tituloVisita);
         visita.setAsignaturaAReforzar(asignatura);
         visita.setDocenteEncargado(docenteEncargado);
@@ -93,8 +99,7 @@ public class SolicitudServlet extends HttpServlet {
         boolean exito = visitaService.crearVisitaCompleta(visita, empresa, grupoVisita);
 
         if (exito) {
-            request.setAttribute("mensaje", "Solicitud creada exitosamente.");
-            request.getRequestDispatcher("index.jsp").forward(request, response);
+            response.sendRedirect(request.getContextPath() + "/inicio");
         } else {
             request.setAttribute("error", "Error al crear la solicitud. Intente nuevamente.");
             request.getRequestDispatcher("nueva-solicitud.jsp").forward(request, response);
@@ -104,6 +109,6 @@ public class SolicitudServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.sendRedirect("nueva-solicitud.jsp");
+        response.sendRedirect(request.getContextPath() + "/nueva-solicitud.jsp");
     }
 }
