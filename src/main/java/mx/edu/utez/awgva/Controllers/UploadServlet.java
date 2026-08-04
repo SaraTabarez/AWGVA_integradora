@@ -9,90 +9,104 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import mx.edu.utez.awgva.Dao.DocumentoDao;
 import mx.edu.utez.awgva.Model.Documento;
+import mx.edu.utez.awgva.Utils.FileValidationUtil;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
-@WebServlet(name = "UploadServlet", value = "/upload-servlet")
-@MultipartConfig(
-        fileSizeThreshold = 1024 * 1024,     // 1 MB
-        maxFileSize = 1024 * 1024 * 10,      // 10 MB
-        maxRequestSize = 1024 * 1024 * 15   // 15 MB
-)
+@WebServlet(name = "UploadDocumentServlet", value = "/upload-servlet")
+@MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 10 * 1024 * 1024, maxRequestSize = 15 * 1024 * 1024)
 public class UploadServlet extends HttpServlet {
 
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(".pdf", ".png", ".jpg", ".jpeg", ".webp");
     private DocumentoDao documentoDao;
-    private static final String UPLOAD_DIR = "uploads";
+    private Path uploadRoot;
 
     @Override
     public void init() throws ServletException {
-        this.documentoDao = new DocumentoDao();
-        // Crear directorio de uploads si no existe
-        String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
-        File uploadDir = new File(uploadPath);
-        if (!uploadDir.exists()) {
-            uploadDir.mkdir();
+        documentoDao = new DocumentoDao();
+        String configuredDirectory = System.getenv("AWGVA_UPLOAD_DIR");
+        Path base = configuredDirectory == null || configuredDirectory.isBlank()
+                ? ((java.io.File) getServletContext().getAttribute("jakarta.servlet.context.tempdir")).toPath()
+                : Path.of(configuredDirectory);
+        uploadRoot = base.resolve("documentos").toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(uploadRoot);
+        } catch (IOException exception) {
+            throw new ServletException("No fue posible preparar el almacenamiento de documentos.", exception);
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        try {
+            Long visitaId = Long.valueOf(request.getParameter("visitaId"));
+            String tipoDocumento = request.getParameter("tipoDocumento");
+            Part filePart = request.getPart("archivo");
 
-        String visitaIdStr = request.getParameter("visitaId");
-        String tipoDocumento = request.getParameter("tipoDocumento");
+            if (tipoDocumento == null || tipoDocumento.isBlank() || tipoDocumento.length() > 50
+                    || filePart == null || filePart.getSize() == 0) {
+                throw new IllegalArgumentException("Faltan datos del documento.");
+            }
 
-        if (visitaIdStr == null || visitaIdStr.isBlank() || tipoDocumento == null || tipoDocumento.isBlank()) {
-            request.setAttribute("error", "Por favor, selecciona una visita y el tipo de documento.");
-            request.getRequestDispatcher("subir-docs.jsp").forward(request, response);
-            return;
-        }
+            String submittedName = filePart.getSubmittedFileName();
+            if (submittedName == null || submittedName.isBlank()) {
+                throw new IllegalArgumentException("Nombre de archivo no válido.");
+            }
+            String originalName = submittedName.replace('\\', '/');
+            originalName = originalName.substring(originalName.lastIndexOf('/') + 1);
+            String extension = extensionOf(originalName);
+            if (!ALLOWED_EXTENSIONS.contains(extension)) {
+                throw new IllegalArgumentException("Tipo de archivo no permitido.");
+            }
 
-        Long visitaId = Long.parseLong(visitaIdStr);
-        Part filePart = request.getPart("archivo");
+            Path target = uploadRoot.resolve(UUID.randomUUID() + extension).normalize();
+            if (!target.startsWith(uploadRoot)) {
+                throw new IllegalArgumentException("Nombre de archivo no válido.");
+            }
+            try (InputStream input = filePart.getInputStream()) {
+                Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+            if (!FileValidationUtil.hasExpectedSignature(target, extension)) {
+                Files.deleteIfExists(target);
+                throw new IllegalArgumentException("El contenido no coincide con la extensión del archivo.");
+            }
 
-        if (filePart == null || filePart.getSize() == 0) {
-            request.setAttribute("error", "Por favor, selecciona un archivo.");
-            request.getRequestDispatcher("subir-docs.jsp").forward(request, response);
-            return;
-        }
+            Documento documento = new Documento();
+            documento.setIdVisitaFk(visitaId);
+            documento.setTipoDocumento(tipoDocumento);
+            documento.setRutaArchivo(target.toString());
+            documento.setNombreArchivo(originalName);
+            documento.setTamanoArchivo(filePart.getSize());
 
-        // Generar nombre único para el archivo
-        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-        String fileExtension = fileName.substring(fileName.lastIndexOf("."));
-        String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
+            if (!documentoDao.guardarDocumento(documento)) {
+                Files.deleteIfExists(target);
+                throw new IllegalStateException("No fue posible registrar el documento.");
+            }
 
-        // Ruta donde se guardará el archivo
-        String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
-        String filePath = uploadPath + File.separator + uniqueFileName;
-
-        // Guardar archivo en disco
-        filePart.write(filePath);
-
-        // Guardar en base de datos
-        Documento documento = new Documento();
-        documento.setIdVisitaFk(visitaId);
-        documento.setTipoDocumento(tipoDocumento);
-        documento.setRutaArchivo(UPLOAD_DIR + File.separator + uniqueFileName);
-        documento.setNombreArchivo(fileName);
-        documento.setTamanoArchivo(filePart.getSize());
-
-        boolean exito = documentoDao.guardarDocumento(documento);
-
-        if (exito) {
             request.setAttribute("mensaje", "Documento subido exitosamente.");
-            request.getRequestDispatcher("subir-docs.jsp").forward(request, response);
-        } else {
-            request.setAttribute("error", "Error al guardar el documento en la base de datos.");
-            request.getRequestDispatcher("subir-docs.jsp").forward(request, response);
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            request.setAttribute("error", exception.getMessage());
         }
+        request.getRequestDispatcher("/subir-docs.jsp").forward(request, response);
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.sendRedirect("subir-docs.jsp");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.sendRedirect(request.getContextPath() + "/subir-docs.jsp");
+    }
+
+    private String extensionOf(String fileName) {
+        String lowerName = fileName.toLowerCase(Locale.ROOT);
+        int dot = lowerName.lastIndexOf('.');
+        return dot < 0 ? "" : lowerName.substring(dot);
     }
 }

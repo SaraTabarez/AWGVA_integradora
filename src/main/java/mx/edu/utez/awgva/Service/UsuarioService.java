@@ -1,124 +1,194 @@
 package mx.edu.utez.awgva.Service;
 
 import mx.edu.utez.awgva.Dao.UsuarioDao;
+import mx.edu.utez.awgva.Model.TipoRol;
 import mx.edu.utez.awgva.Model.Usuario;
 import mx.edu.utez.awgva.Utils.EmailSender;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+
 import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
-import java.util.Random;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 public class UsuarioService {
 
-    private UsuarioDao usuarioDao;
+    private static final Pattern INSTITUTIONAL_EMAIL = Pattern.compile(
+            "^[A-Z0-9._%+-]+@utez\\.edu\\.mx$",
+            Pattern.CASE_INSENSITIVE
+    );
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    private final UsuarioDao usuarioDao;
+    private final PasswordService passwordService;
 
     public UsuarioService() {
-        this.usuarioDao = new UsuarioDao();
+        this(new UsuarioDao(), new PasswordService());
+    }
+
+    UsuarioService(UsuarioDao usuarioDao, PasswordService passwordService) {
+        this.usuarioDao = usuarioDao;
+        this.passwordService = passwordService;
     }
 
     public Usuario authenticate(String correo, String password) {
-        Usuario usuario = usuarioDao.findByEmail(correo);
-
-        if (usuario == null) {
+        if (correo == null || password == null || correo.length() > 160 || password.length() > 200) {
             return null;
         }
 
-        if (usuario.getEstado() == 0) {
+        Usuario usuario = usuarioDao.findByEmail(correo.trim().toLowerCase(Locale.ROOT));
+        if (usuario == null || usuario.getEstado() == null || usuario.getEstado() != 1) {
             return null;
         }
 
-        // CORRECCIÓN: Comparamos la contraseña en texto plano directamente
-        // con la que viene de la base de datos, sin encriptarla.
-        if (password.equals(usuario.getPasswordHash())) {
-            return usuario;
+        PasswordService.Verification verification = passwordService.verify(
+                password,
+                usuario.getPasswordHash()
+        );
+        if (!verification.valid() || usuario.getTipoRol().isEmpty()) {
+            return null;
         }
-        return null;
+
+        // Migración transparente de los registros antiguos en texto plano/SHA-256.
+        if (verification.needsRehash()) {
+            usuarioDao.updatePasswordHash(usuario.getIdUsuario(), passwordService.hash(password));
+        }
+
+        // El hash no debe permanecer dentro del objeto guardado en la sesión.
+        usuario.setPasswordHash(null);
+        usuario.setResetToken(null);
+        usuario.setResetTokenExpiration(null);
+        return usuario;
+    }
+
+    public boolean register(Usuario usuario, String plainPassword) {
+        validateRegistration(usuario, plainPassword);
+        usuario.setCorreo(usuario.getCorreo().trim().toLowerCase(Locale.ROOT));
+        usuario.setPasswordHash(passwordService.hash(plainPassword));
+        return usuarioDao.save(usuario);
+    }
+
+    public List<Usuario> findAll() {
+        return usuarioDao.findAll();
+    }
+
+    public Map<Long, String> findRoles() {
+        return usuarioDao.findRoles();
+    }
+
+    public Map<Long, String> findDivisiones() {
+        return usuarioDao.findDivisiones();
+    }
+
+    public boolean updateStatus(Long idUsuario, int estado) {
+        if (idUsuario == null || (estado != 0 && estado != 1)) {
+            return false;
+        }
+        return usuarioDao.updateEstado(idUsuario, estado);
     }
 
     public boolean generateAndSendResetCode(String correo) {
         Usuario usuario = usuarioDao.findByEmail(correo);
         if (usuario == null) {
-            return false; // Usuario no encontrado
-        }
-        String resetToken = generateRandomCode(6);
-        long expirationTime = System.currentTimeMillis() + (15 * 60 * 1000);
-        Timestamp expiration = new Timestamp(expirationTime);
-        boolean updated = usuarioDao.updateResetToken(correo, resetToken, expiration);
-        if (!updated) {
             return false;
         }
+
+        String resetToken = generateRandomCode(8);
+        Timestamp expiration = new Timestamp(System.currentTimeMillis() + (15 * 60 * 1000));
+        if (!usuarioDao.updateResetToken(correo, resetToken, expiration)) {
+            return false;
+        }
+
         String plantillaHtml = """
-            <html>
-                <body style="font-family: Arial, sans-serif; color: #333333; background-color: #f4f4f4; padding: 20px;">
-                    <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                        <h2 style="color: #0056b3; margin-bottom: 20px;">Recuperación de Contraseña</h2>
-                        <p style="font-size: 16px;">Hola, <strong>{0}</strong></p>
-                        <p style="font-size: 16px;">Has solicitado recuperar tu contraseña. Tu código de verificación es:</p>
-                        <div style="background-color: #0056b3; color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; margin: 20px 0; border-radius: 5px; letter-spacing: 5px;">
-                            {1}
-                        </div>
-                        <p style="font-size: 14px; color: #666;">Este código expirará en <strong>15 minutos</strong>.</p>
-                        <p style="font-size: 14px; color: #666;">Si no solicitaste este cambio, puedes ignorar este correo.</p>
-                    </div>
-                </body>
-            </html>
-            """;
+                <html>
+                    <body style="font-family: Arial, sans-serif; color: #333333;">
+                        <h2 style="color: #1e3a5f;">Recuperación de contraseña</h2>
+                        <p>Hola, <strong>{0}</strong>.</p>
+                        <p>Tu código de verificación es:</p>
+                        <div style="font-size: 30px; font-weight: bold; letter-spacing: 5px;">{1}</div>
+                        <p>El código expirará en 15 minutos.</p>
+                    </body>
+                </html>
+                """;
 
-        String cuerpoCorreo = MessageFormat.format(
-                plantillaHtml,
-                usuario.getNombreCompleto(),
-                resetToken
-        );
-
+        String body = MessageFormat.format(plantillaHtml, usuario.getNombreCompleto(), resetToken);
         try {
-            EmailSender.sendMail(correo, "Código de Recuperación de Contraseña", cuerpoCorreo);
+            EmailSender.sendMail(correo, "Código de recuperación de contraseña", body);
             return true;
-        } catch (Exception e) {
-            System.err.println("Error al enviar correo: " + e.getMessage());
+        } catch (RuntimeException exception) {
+            System.err.println("No fue posible enviar el correo de recuperación.");
             return false;
         }
     }
 
-    public boolean resetPassword(String token, String newPassword) {
-        if (!usuarioDao.isResetTokenValid(token)) {
+    public boolean resetPassword(String token, String correo, String newPassword) {
+        validatePassword(newPassword);
+        if (correo == null || !usuarioDao.isResetTokenValid(token, correo)) {
             return false;
         }
 
-        Usuario usuario = usuarioDao.findByResetToken(token);
+        Usuario usuario = usuarioDao.findByResetToken(token, correo);
+        return usuario != null && usuarioDao.updatePassword(
+                usuario.getCorreo(),
+                passwordService.hash(newPassword)
+        );
+    }
+
+    private void validateRegistration(Usuario usuario, String password) {
         if (usuario == null) {
-            return false;
+            throw new IllegalArgumentException("Los datos del usuario son obligatorios.");
         }
-        String hashedPassword = hashPassword(newPassword);
-        return usuarioDao.updatePassword(usuario.getCorreo(), hashedPassword);
+        requireText(usuario.getNombres(), "El nombre es obligatorio.", 100);
+        requireText(usuario.getApellidoPaterno(), "El apellido paterno es obligatorio.", 100);
+        requireText(usuario.getApellidoMaterno(), "El apellido materno es obligatorio.", 100);
+
+        if (usuario.getCorreo() == null || !INSTITUTIONAL_EMAIL.matcher(usuario.getCorreo().trim()).matches()) {
+            throw new IllegalArgumentException("Usa un correo institucional @utez.edu.mx válido.");
+        }
+        validatePassword(password);
+
+        Map<Long, String> roles = usuarioDao.findRoles();
+        String roleName = roles.get(usuario.getIdRolFk());
+        TipoRol role = TipoRol.from(roleName)
+                .orElseThrow(() -> new IllegalArgumentException("Selecciona un rol válido."));
+
+        if (!usuarioDao.divisionExists(usuario.getIdDivisionFk())) {
+            throw new IllegalArgumentException("La división seleccionada no existe.");
+        }
+        if ((role == TipoRol.DOCENTE || role == TipoRol.DIRECTOR)
+                && usuario.getIdDivisionFk() == null) {
+            throw new IllegalArgumentException("Docente y Director deben tener una división asignada.");
+        }
+        if (usuarioDao.emailExists(usuario.getCorreo())) {
+            throw new IllegalArgumentException("Ya existe un usuario con ese correo.");
+        }
+    }
+
+    private void validatePassword(String password) {
+        if (password == null || password.length() < 10
+                || !password.matches(".[A-Z].")
+                || !password.matches(".[a-z].")
+                || !password.matches(".\\d.")
+                || !password.matches(".[^A-Za-z0-9].")) {
+            throw new IllegalArgumentException(
+                    "La contraseña debe tener al menos 10 caracteres, mayúscula, minúscula, número y símbolo."
+            );
+        }
+    }
+
+    private void requireText(String value, String message, int maxLength) {
+        if (value == null || value.isBlank() || value.length() > maxLength) {
+            throw new IllegalArgumentException(message);
+        }
     }
 
     private String generateRandomCode(int length) {
-        Random random = new SecureRandom();
-        StringBuilder code = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            code.append(random.nextInt(10));
+        StringBuilder code = new StringBuilder(length);
+        for (int index = 0; index < length; index++) {
+            code.append(SECURE_RANDOM.nextInt(10));
         }
         return code.toString();
-    }
-
-    private String hashPassword(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error al hashear contraseña: " + e.getMessage());
-        }
     }
 }

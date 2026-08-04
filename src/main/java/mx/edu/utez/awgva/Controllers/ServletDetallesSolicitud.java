@@ -22,6 +22,6 @@ public class ServletDetallesSolicitud extends HttpServlet {
 
         req.setAttribute("solicitud", solicitud);
         // Se quita "/WEB-INF/" porque el archivo JSP está en la raíz de webapp
-        req.getRequestDispatcher("solicitud-visita-industrial.jsp").forward(req, resp);
+        req.getRequestDispatcher("/solicitud-visita-industrial.jsp").forward(req, resp);
     }
 }

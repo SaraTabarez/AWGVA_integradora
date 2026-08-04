@@ -3,240 +3,306 @@ package mx.edu.utez.awgva.Dao;
 import mx.edu.utez.awgva.Model.Usuario;
 import mx.edu.utez.awgva.Utils.DatabaseConnection;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UsuarioDao {
 
-    // ==========================================
-    // MÉTODOS PARA GESTIÓN DE USUARIOS (TABLA Y REGISTRO)
-    // ==========================================
+    private static final String USER_COLUMNS = "u.ID_USUARIO, u.CORREO, u.PASSWORD_HASH, "
+            + "u.NOMBRES, u.APELLIDO_PATERNO, u.APELLIDO_MATERNO, "
+            + "u.ID_ROL_FK, u.ID_DIVISION_FK, u.ESTADO, u.CREADO_EN, "
+            + "u.ACTUALIZADO_EN, u.RESET_TOKEN, u.RESET_TOKEN_EXPIRATION";
+
+    private static final String LIST_COLUMNS = "u.ID_USUARIO, u.CORREO, u.NOMBRES, "
+            + "u.APELLIDO_PATERNO, u.APELLIDO_MATERNO, u.ID_ROL_FK, "
+            + "u.ID_DIVISION_FK, u.ESTADO, u.CREADO_EN, u.ACTUALIZADO_EN";
 
     /**
-     * Obtiene la lista completa de usuarios uniendo ROL y DIVISION
-     * para traer los nombres y mostrarlos en la tabla JSP.
+     * Lista de usuarios para Administración. El JOIN evita consultas N+1 para
+     * obtener el nombre del rol y la división.
      */
     public List<Usuario> findAll() {
-        List<Usuario> lista = new ArrayList<>();
-        String query = "SELECT u.*, r.NOMBRE AS NOMBRE_ROL, d.NOMBRE AS NOMBRE_DIVISION " +
-                "FROM USUARIO u " +
-                "LEFT JOIN ROL r ON u.ID_ROL_FK = r.ID_ROL " +
-                "LEFT JOIN DIVISION d ON u.ID_DIVISION_FK = d.ID_DIVISION " +
-                "ORDER BY u.ID_USUARIO DESC";
+        List<Usuario> usuarios = new ArrayList<>();
+        String sql = "SELECT " + LIST_COLUMNS
+                + ", r.NOMBRE AS NOMBRE_ROL, d.NOMBRE AS NOMBRE_DIVISION "
+                + "FROM USUARIO u "
+                + "LEFT JOIN ROL r ON r.ID_ROL = u.ID_ROL_FK "
+                + "LEFT JOIN DIVISION d ON d.ID_DIVISION = u.ID_DIVISION_FK "
+                + "ORDER BY u.ID_USUARIO DESC";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
 
-            while (rs.next()) {
-                Usuario usuario = mapResultSetToUsuario(rs);
-
-                // Si tu modelo Usuario tiene los campos de texto auxiliares nombreRol y nombreDivision:
-                try {
-                    usuario.setNombreRol(rs.getString("NOMBRE_ROL"));
-                    usuario.setNombreDivision(rs.getString("NOMBRE_DIVISION"));
-                } catch (SQLException ignored) {
-                    // En caso de que no existan esos setters en tu modelo, se ignoran
-                }
-
-                lista.add(usuario);
+            while (resultSet.next()) {
+                usuarios.add(mapUsuario(resultSet));
             }
-        } catch (SQLException e) {
-            System.err.println("Error al listar usuarios: " + e.getMessage());
-            e.printStackTrace();
+        } catch (SQLException exception) {
+            System.err.println("No fue posible listar usuarios: " + exception.getMessage());
         }
-
-        return lista;
+        return usuarios;
     }
-
-    /**
-     * Registra un nuevo usuario en la base de datos
-     */
-    public boolean save(Usuario usuario) {
-        String query = "INSERT INTO USUARIO (CORREO, PASSWORD_HASH, NOMBRES, APELLIDO_PATERNO, APELLIDO_MATERNO, ID_ROL_FK, ID_DIVISION_FK, ESTADO, CREADO_EN) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
-            stmt.setString(1, usuario.getCorreo());
-            stmt.setString(2, usuario.getPasswordHash());
-            stmt.setString(3, usuario.getNombres());
-            stmt.setString(4, usuario.getApellidoPaterno());
-            stmt.setString(5, usuario.getApellidoMaterno());
-
-            if (usuario.getIdRolFk() != null) {
-                stmt.setLong(6, usuario.getIdRolFk());
-            } else {
-                stmt.setNull(6, Types.BIGINT);
-            }
-
-            if (usuario.getIdDivisionFk() != null) {
-                stmt.setLong(7, usuario.getIdDivisionFk());
-            } else {
-                stmt.setNull(7, Types.BIGINT);
-            }
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Error al registrar usuario: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /**
-     * Actualiza el estado (1 o 0) desde el switch de la tabla
-     */
-    public boolean updateEstado(Long idUsuario, int estado) {
-        String query = "UPDATE USUARIO SET ESTADO = ?, ACTUALIZADO_EN = CURRENT_TIMESTAMP WHERE ID_USUARIO = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
-            stmt.setInt(1, estado);
-            stmt.setLong(2, idUsuario);
-
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Error al actualizar estado del usuario: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // ==========================================
-    // MÉTODOS PREVIOS (RECUPERACIÓN Y BÚSQUEDA)
-    // ==========================================
 
     public Usuario findByEmail(String correo) {
-        Usuario usuario = null;
-        String query = "SELECT * FROM USUARIO WHERE CORREO = ? AND ESTADO = 1";
+        String sql = "SELECT " + USER_COLUMNS
+                + ", r.NOMBRE AS NOMBRE_ROL, d.NOMBRE AS NOMBRE_DIVISION "
+                + "FROM USUARIO u "
+                + "JOIN ROL r ON r.ID_ROL = u.ID_ROL_FK "
+                + "LEFT JOIN DIVISION d ON d.ID_DIVISION = u.ID_DIVISION_FK "
+                + "WHERE LOWER(u.CORREO) = LOWER(?) AND u.ESTADO = 1";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, correo);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    usuario = mapResultSetToUsuario(rs);
-                }
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, correo);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? mapUsuario(resultSet) : null;
             }
-        } catch (SQLException e) {
-            System.err.println("Error al buscar usuario por correo: " + e.getMessage());
-            e.printStackTrace();
+        } catch (SQLException exception) {
+            System.err.println("No fue posible autenticar al usuario: " + exception.getMessage());
+            return null;
         }
-
-        return usuario;
     }
 
-    public Usuario findByResetToken(String token) {
-        Usuario usuario = null;
-        String query = "SELECT * FROM USUARIO WHERE RESET_TOKEN = ? AND ESTADO = 1";
+    public Usuario findByResetToken(String token, String correo) {
+        String sql = "SELECT " + USER_COLUMNS
+                + ", r.NOMBRE AS NOMBRE_ROL, d.NOMBRE AS NOMBRE_DIVISION "
+                + "FROM USUARIO u "
+                + "JOIN ROL r ON r.ID_ROL = u.ID_ROL_FK "
+                + "LEFT JOIN DIVISION d ON d.ID_DIVISION = u.ID_DIVISION_FK "
+                + "WHERE u.RESET_TOKEN = ? AND LOWER(u.CORREO) = LOWER(?) "
+                + "AND u.RESET_TOKEN_EXPIRATION > CURRENT_TIMESTAMP "
+                + "AND u.ESTADO = 1";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
-            stmt.setString(1, token);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    usuario = mapResultSetToUsuario(rs);
-                }
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, token);
+            statement.setString(2, correo);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? mapUsuario(resultSet) : null;
             }
-        } catch (SQLException e) {
-            System.err.println("Error al buscar usuario por token: " + e.getMessage());
-            e.printStackTrace();
+        } catch (SQLException exception) {
+            System.err.println("No fue posible validar el código de recuperación: " + exception.getMessage());
+            return null;
         }
+    }
 
-        return usuario;
+    public boolean save(Usuario usuario) {
+        String sql = "INSERT INTO USUARIO "
+                + "(CORREO, PASSWORD_HASH, NOMBRES, APELLIDO_PATERNO, APELLIDO_MATERNO, "
+                + "ID_ROL_FK, ID_DIVISION_FK, ESTADO, CREADO_EN) "
+                + "VALUES (LOWER(?), ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, usuario.getCorreo());
+            statement.setString(2, usuario.getPasswordHash());
+            statement.setString(3, usuario.getNombres());
+            statement.setString(4, usuario.getApellidoPaterno());
+            statement.setString(5, usuario.getApellidoMaterno());
+            setNullableLong(statement, 6, usuario.getIdRolFk());
+            setNullableLong(statement, 7, usuario.getIdDivisionFk());
+            return statement.executeUpdate() == 1;
+        } catch (SQLException exception) {
+            System.err.println("No fue posible registrar el usuario: " + exception.getMessage());
+            return false;
+        }
+    }
+
+    public boolean emailExists(String correo) {
+        String sql = "SELECT 1 FROM USUARIO WHERE LOWER(CORREO) = LOWER(?) FETCH FIRST 1 ROWS ONLY";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, correo);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException exception) {
+            System.err.println("No fue posible validar el correo: " + exception.getMessage());
+            return true;
+        }
+    }
+
+    public boolean updateEstado(Long idUsuario, int estado) {
+        String sql = "UPDATE USUARIO SET ESTADO = ?, ACTUALIZADO_EN = CURRENT_TIMESTAMP "
+                + "WHERE ID_USUARIO = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, estado);
+            statement.setLong(2, idUsuario);
+            return statement.executeUpdate() == 1;
+        } catch (SQLException exception) {
+            System.err.println("No fue posible actualizar el estado: " + exception.getMessage());
+            return false;
+        }
     }
 
     public boolean updateResetToken(String correo, String token, Timestamp expiration) {
-        String query = "UPDATE USUARIO SET RESET_TOKEN = ?, RESET_TOKEN_EXPIRATION = ?, ACTUALIZADO_EN = CURRENT_TIMESTAMP WHERE CORREO = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
-            stmt.setString(1, token);
-            stmt.setTimestamp(2, expiration);
-            stmt.setString(3, correo);
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Error al actualizar token de recuperación: " + e.getMessage());
-            e.printStackTrace();
+        String sql = "UPDATE USUARIO SET RESET_TOKEN = ?, RESET_TOKEN_EXPIRATION = ?, "
+                + "ACTUALIZADO_EN = CURRENT_TIMESTAMP WHERE LOWER(CORREO) = LOWER(?)";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, token);
+            statement.setTimestamp(2, expiration);
+            statement.setString(3, correo);
+            return statement.executeUpdate() == 1;
+        } catch (SQLException exception) {
+            System.err.println("No fue posible actualizar el código de recuperación: " + exception.getMessage());
             return false;
         }
     }
 
     public boolean updatePassword(String correo, String newPasswordHash) {
-        String query = "UPDATE USUARIO SET PASSWORD_HASH = ?, RESET_TOKEN = NULL, RESET_TOKEN_EXPIRATION = NULL, ACTUALIZADO_EN = CURRENT_TIMESTAMP WHERE CORREO = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
-            stmt.setString(1, newPasswordHash);
-            stmt.setString(2, correo);
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Error al actualizar contraseña: " + e.getMessage());
-            e.printStackTrace();
+        String sql = "UPDATE USUARIO SET PASSWORD_HASH = ?, RESET_TOKEN = NULL, "
+                + "RESET_TOKEN_EXPIRATION = NULL, ACTUALIZADO_EN = CURRENT_TIMESTAMP "
+                + "WHERE LOWER(CORREO) = LOWER(?)";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, newPasswordHash);
+            statement.setString(2, correo);
+            return statement.executeUpdate() == 1;
+        } catch (SQLException exception) {
+            System.err.println("No fue posible actualizar la contraseña: " + exception.getMessage());
             return false;
         }
     }
 
-    public boolean isResetTokenValid(String token) {
-        String query = "SELECT COUNT(*) FROM USUARIO WHERE RESET_TOKEN = ? AND RESET_TOKEN_EXPIRATION > CURRENT_TIMESTAMP AND ESTADO = 1";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-
-            stmt.setString(1, token);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al validar token: " + e.getMessage());
-            e.printStackTrace();
+    public boolean updatePasswordHash(Long idUsuario, String newPasswordHash) {
+        String sql = "UPDATE USUARIO SET PASSWORD_HASH = ?, ACTUALIZADO_EN = CURRENT_TIMESTAMP "
+                + "WHERE ID_USUARIO = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, newPasswordHash);
+            statement.setLong(2, idUsuario);
+            return statement.executeUpdate() == 1;
+        } catch (SQLException exception) {
+            System.err.println("No fue posible migrar la contraseña: " + exception.getMessage());
+            return false;
         }
-
-        return false;
     }
 
-    private Usuario mapResultSetToUsuario(ResultSet rs) throws SQLException {
+    public boolean isResetTokenValid(String token, String correo) {
+        String sql = "SELECT 1 FROM USUARIO WHERE RESET_TOKEN = ? AND LOWER(CORREO) = LOWER(?) "
+                + "AND RESET_TOKEN_EXPIRATION > CURRENT_TIMESTAMP AND ESTADO = 1 "
+                + "FETCH FIRST 1 ROWS ONLY";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, token);
+            statement.setString(2, correo);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException exception) {
+            System.err.println("No fue posible validar el código: " + exception.getMessage());
+            return false;
+        }
+    }
+
+    public Map<Long, String> findRoles() {
+        return findCatalog("SELECT ID_ROL, NOMBRE FROM ROL ORDER BY NOMBRE", "ID_ROL", "NOMBRE");
+    }
+
+    public Map<Long, String> findDivisiones() {
+        return findCatalog(
+                "SELECT ID_DIVISION, NOMBRE FROM DIVISION ORDER BY NOMBRE",
+                "ID_DIVISION",
+                "NOMBRE"
+        );
+    }
+
+    public boolean roleExists(Long idRol) {
+        return catalogValueExists("ROL", "ID_ROL", idRol);
+    }
+
+    public boolean divisionExists(Long idDivision) {
+        return idDivision == null || catalogValueExists("DIVISION", "ID_DIVISION", idDivision);
+    }
+
+    private Map<Long, String> findCatalog(String sql, String idColumn, String nameColumn) {
+        Map<Long, String> values = new LinkedHashMap<>();
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                values.put(resultSet.getLong(idColumn), resultSet.getString(nameColumn));
+            }
+        } catch (SQLException exception) {
+            System.err.println("No fue posible cargar el catálogo: " + exception.getMessage());
+        }
+        return values;
+    }
+
+    private boolean catalogValueExists(String table, String idColumn, Long id) {
+        if (id == null) {
+            return false;
+        }
+        // table e idColumn sólo se invocan con constantes internas, no con datos del usuario.
+        String sql = "SELECT 1 FROM " + table + " WHERE " + idColumn + " = ? FETCH FIRST 1 ROWS ONLY";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException exception) {
+            System.err.println("No fue posible validar el catálogo: " + exception.getMessage());
+            return false;
+        }
+    }
+
+    private Usuario mapUsuario(ResultSet resultSet) throws SQLException {
         Usuario usuario = new Usuario();
-        usuario.setIdUsuario(rs.getLong("ID_USUARIO"));
-        usuario.setCorreo(rs.getString("CORREO"));
-        usuario.setPasswordHash(rs.getString("PASSWORD_HASH"));
-        usuario.setNombres(rs.getString("NOMBRES"));
-        usuario.setApellidoPaterno(rs.getString("APELLIDO_PATERNO"));
-        usuario.setApellidoMaterno(rs.getString("APELLIDO_MATERNO"));
-
-        Long idRol = rs.getObject("ID_ROL_FK") != null ? rs.getLong("ID_ROL_FK") : null;
-        usuario.setIdRolFk(idRol);
-
-        Long idDivision = rs.getObject("ID_DIVISION_FK") != null ? rs.getLong("ID_DIVISION_FK") : null;
-        usuario.setIdDivisionFk(idDivision);
-
-        usuario.setEstado(rs.getInt("ESTADO"));
-        usuario.setCreadoEn(rs.getTimestamp("CREADO_EN"));
-        usuario.setActualizadoEn(rs.getTimestamp("ACTUALIZADO_EN"));
-
-        // Tratar con cuidado columnas que pueden no venir en queries personalizadas
-        try { usuario.setResetToken(rs.getString("RESET_TOKEN")); } catch (SQLException ignored) {}
-        try { usuario.setResetTokenExpiration(rs.getTimestamp("RESET_TOKEN_EXPIRATION")); } catch (SQLException ignored) {}
-
+        usuario.setIdUsuario(resultSet.getLong("ID_USUARIO"));
+        usuario.setCorreo(resultSet.getString("CORREO"));
+        usuario.setPasswordHash(optionalString(resultSet, "PASSWORD_HASH"));
+        usuario.setNombres(resultSet.getString("NOMBRES"));
+        usuario.setApellidoPaterno(resultSet.getString("APELLIDO_PATERNO"));
+        usuario.setApellidoMaterno(resultSet.getString("APELLIDO_MATERNO"));
+        usuario.setIdRolFk(nullableLong(resultSet, "ID_ROL_FK"));
+        usuario.setIdDivisionFk(nullableLong(resultSet, "ID_DIVISION_FK"));
+        usuario.setEstado(resultSet.getInt("ESTADO"));
+        usuario.setCreadoEn(resultSet.getTimestamp("CREADO_EN"));
+        usuario.setActualizadoEn(resultSet.getTimestamp("ACTUALIZADO_EN"));
+        usuario.setResetToken(optionalString(resultSet, "RESET_TOKEN"));
+        usuario.setResetTokenExpiration(optionalTimestamp(resultSet, "RESET_TOKEN_EXPIRATION"));
+        usuario.setNombreRol(optionalString(resultSet, "NOMBRE_ROL"));
+        usuario.setNombreDivision(optionalString(resultSet, "NOMBRE_DIVISION"));
         return usuario;
+    }
+
+    private Long nullableLong(ResultSet resultSet, String column) throws SQLException {
+        long value = resultSet.getLong(column);
+        return resultSet.wasNull() ? null : value;
+    }
+
+    private String optionalString(ResultSet resultSet, String column) {
+        try {
+            return resultSet.getString(column);
+        } catch (SQLException ignored) {
+            return null;
+        }
+    }
+
+    private Timestamp optionalTimestamp(ResultSet resultSet, String column) {
+        try {
+            return resultSet.getTimestamp(column);
+        } catch (SQLException ignored) {
+            return null;
+        }
+    }
+
+    private void setNullableLong(PreparedStatement statement, int index, Long value) throws SQLException {
+        if (value == null) {
+            statement.setNull(index, Types.NUMERIC);
+        } else {
+            statement.setLong(index, value);
+        }
     }
 }
