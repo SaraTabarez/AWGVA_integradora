@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import mx.edu.utez.awgva.Model.TipoRol;
 import mx.edu.utez.awgva.Model.Usuario;
+import mx.edu.utez.awgva.Service.VisitaService;
 
 import java.io.IOException;
 import java.util.Map;
@@ -39,6 +40,10 @@ public class InicioServlet extends HttpServlet {
         }
 
         request.setAttribute("role", role.name());
+        if (role == TipoRol.DOCENTE) {
+            request.setAttribute("totalSolicitudes",
+                    new VisitaService().listarDelDocente(usuario.getIdUsuario()).size());
+        }
         request.getRequestDispatcher(ROLE_VIEWS.get(role)).forward(request, response);
     }
 }
