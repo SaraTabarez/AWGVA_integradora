@@ -176,6 +176,7 @@
             <p class="section-subtitle">Adjunta imágenes (PNG, JPG, WEBP) y documentos (PDF)</p>
 
             <form action="UploadServlet" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
                 <div class="upload-area" id="uploadArea">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <h4>Arrastra archivos aquí o <span class="text-primary text-decoration-underline">selecciona</span></h4>

@@ -178,6 +178,7 @@
         </div>
 
         <form id="uploadForm" action="cartaEnviadaExito.jsp?index=<%= indexNum %>" method="POST">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <footer class="action-buttons">
                 <!-- Botón Anterior para salir sin subir nada -->
                 <button type="button" class="btn-action" onclick="volverADetalle()">Anterior</button>

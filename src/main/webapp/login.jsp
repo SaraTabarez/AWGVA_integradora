@@ -224,6 +224,12 @@
                 </div>
                 <% } %>
 
+                <% if ("updated".equals(request.getParameter("password"))) { %>
+                <div class="alert alert-success py-2 mb-3" role="alert" style="font-size: 0.85rem;">
+                    Contraseña actualizada. Ya puedes iniciar sesión.
+                </div>
+                <% } %>
+
                 <form action="<%= request.getContextPath() %>/login" method="POST">
 
                     <!-- Campo Correo / Matrícula -->
@@ -231,7 +237,7 @@
                         <label class="form-label-custom d-block">CORREO ELECTRÓNICO/MATRÍCULA:</label>
                         <div class="custom-input-group">
                             <i class="bi bi-envelope"></i>
-                            <input type="text" name="correo" placeholder="usuario@utez.edu.mx" required>
+                            <input type="email" name="correo" maxlength="160" placeholder="usuario@utez.edu.mx" required>
                         </div>
                     </div>
 
@@ -240,7 +246,7 @@
                         <label class="form-label-custom d-block">CONTRASEÑA:</label>
                         <div class="custom-input-group">
                             <i class="bi bi-lock"></i>
-                            <input type="password" id="passwordInput" name="password" placeholder="********" required>
+                            <input type="password" id="passwordInput" name="password" maxlength="200" placeholder="********" required>
                             <button class="btn-toggle-eye" type="button" id="togglePassword">
                                 <i class="bi bi-eye-slash" id="toggleIcon" style="margin-right: 0;"></i>
                             </button>
@@ -252,7 +258,7 @@
 
                     <!-- Enlace Olvidaste tu contraseña -->
                     <div class="text-end">
-                        <a href="<%= request.getContextPath() %>/recuperar-contra.jsp" class="forgot-link">¿Olvidaste tu contraseña?</a>
+                        <a href="<%= request.getContextPath() %>/reset-password" class="forgot-link">¿Olvidaste tu contraseña?</a>
                     </div>
                 </form>
 

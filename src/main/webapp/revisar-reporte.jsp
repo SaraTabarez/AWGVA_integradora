@@ -186,7 +186,8 @@
         <div class="icon-check">✓</div>
         <h2>¿Aprobar Reporte?</h2>
         <p style="font-size: 13px; color:#666; margin: 10px 0 20px 0;">El reporte pasará al histórico como finalizado correctamente.</p>
-        <form method="post" action="${pageContext.request.contextPath}/views/reportes/revisar-reporte.jsp">
+        <form method="post" action="${pageContext.request.contextPath}/revisar-reporte.jsp">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="accion" value="APROBAR">
             <button type="submit" class="btn-modal-green">Confirmar Aprobación</button>
         </form>
@@ -198,7 +199,8 @@
     <div class="modal-card">
         <div class="icon-cross">✕</div>
         <h2>Rechazar Reporte</h2>
-        <form method="post" action="${pageContext.request.contextPath}/views/reportes/revisar-reporte.jsp">
+        <form method="post" action="${pageContext.request.contextPath}/revisar-reporte.jsp">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <input type="hidden" name="accion" value="RECHAZAR">
             <textarea name="observacionesEstadias" placeholder="Escribe aquí las correcciones solicitadas..." style="width: 100%; height: 80px; margin: 15px 0; padding: 8px;" required></textarea>
             <div>

@@ -1,155 +1,52 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: pc
-  Date: 27/07/2026
-  Time: 06:07 a. m.
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%
-    String step = request.getParameter("step");
-    if (step == null || step.isEmpty()) {
-        step = "codigo";
-    }
-%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recuperar Contraseña - AWGVA</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recuperar contraseña - AWGVA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        body {
-            background-color: #f4f5f7;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-        }
-        .recovery-card {
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            background-color: #ffffff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .btn-orange {
-            background-color: #ff7020;
-            color: #ffffff;
-            border: none;
-        }
-        .btn-orange:hover {
-            background-color: #e05d10;
-            color: #ffffff;
-        }
-        .code-input {
-            width: 45px;
-            height: 50px;
-            text-align: center;
-            font-size: 1.25rem;
-            font-weight: bold;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-        }
-        .code-input:focus {
-            border-color: #ff7020;
-            outline: none;
-            box-shadow: 0 0 0 0.25rem rgba(255, 112, 32, 0.25);
-        }
+        body { background: #f4f6f9; min-height: 100vh; }
+        .recovery-card { max-width: 540px; border: 0; border-radius: 14px; }
+        .btn-awgva { background: #f38218; color: #fff; border: 0; }
+        .btn-awgva:hover { background: #d9700f; color: #fff; }
     </style>
 </head>
-<body class="d-flex align-items-center justify-content-center py-5">
-
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
-            <% if ("codigo".equals(step)) { %>
-            <h3 class="text-center fw-bold text-dark mb-4">Enviar código de seguridad</h3>
-            <div class="card recovery-card p-4 p-md-5">
-                <p class="text-center fw-semibold text-muted mb-3">Se envió un código al correo:</p>
-                <form action="<%= request.getContextPath() %>/reset-password" method="POST">
-                    <input type="hidden" name="action" value="verifyCode">
-                    <div class="mb-3">
-                        <input type="email" class="form-control text-center bg-light border-0 py-2 fw-semibold" value="usuario@utez.edu.mx" readonly>
-                    </div>
-                    <div class="d-flex justify-content-center gap-2 mb-4">
-                        <input type="text" maxlength="1" class="code-input" autofocus>
-                        <input type="text" maxlength="1" class="code-input">
-                        <input type="text" maxlength="1" class="code-input">
-                        <input type="text" maxlength="1" class="code-input">
-                        <input type="text" maxlength="1" class="code-input">
-                        <input type="text" maxlength="1" class="code-input">
-                        <input type="hidden" name="code" id="fullCode">
-                    </div>
-
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <a href="<%= request.getContextPath() %>/login.jsp" class="btn btn-orange w-100 py-2 d-flex align-items-center justify-content-center gap-2">
-                                <i class="bi bi-box-arrow-in-right"></i> Volver al login
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <button type="submit" class="btn btn-orange w-100 py-2 d-flex align-items-center justify-content-center gap-2">
-                                <i class="bi bi-chat-dots"></i> Confirmar código
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <% } else if ("nueva".equals(step)) { %>
-            <h3 class="text-center fw-bold text-dark mb-4">Cambiar contraseña</h3>
-
-            <div class="card recovery-card p-4 p-md-5">
-                <p class="text-center fw-semibold text-muted mb-4">Modifica tu nueva contraseña</p>
-
-                <form action="<%= request.getContextPath() %>/reset-password" method="POST">
-                    <input type="hidden" name="action" value="updatePassword">
-
-                    <div class="mb-3">
-                        <div class="input-group">
-                            <input type="password" class="form-control bg-light border-0 py-2" name="newPassword" placeholder="Ingresa una nueva contraseña" required>
-                            <span class="input-group-text bg-light border-0 text-muted"><i class="bi bi-eye-slash"></i></span>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="input-group">
-                            <input type="password" class="form-control bg-light border-0 py-2" name="confirmPassword" placeholder="Confirmar contraseña" required>
-                            <span class="input-group-text bg-light border-0 text-muted"><i class="bi bi-eye-slash"></i></span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-orange px-4 py-2 d-flex align-items-center gap-2">
-                            <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
-                        </button>
-                    </div>
-                </form>
-            </div>
-            <% } %>
-
-        </div>
+<body class="d-flex align-items-center justify-content-center p-4">
+<main class="card recovery-card shadow-sm w-100 p-4 p-md-5">
+    <div class="text-center mb-4">
+        <i class="bi bi-shield-lock fs-1" style="color:#1e3a5f"></i>
+        <h1 class="h3 fw-bold mt-2">Recuperar contraseña</h1>
+        <p class="text-secondary mb-0">El código tiene una vigencia de 15 minutos.</p>
     </div>
-</div>
 
-<script>
-    const inputs = document.querySelectorAll('.code-input');
-    const fullCodeHidden = document.getElementById('fullCode');
+    <c:if test="${not empty error}"><div class="alert alert-danger"><c:out value="${error}"/></div></c:if>
+    <c:if test="${not empty mensaje}"><div class="alert alert-info"><c:out value="${mensaje}"/></div></c:if>
 
-    inputs.forEach((input, index) => {
-        input.addEventListener('keyup', (e) => {
-            if (e.key >= 0 && e.key <= 9) {
-                if (index < inputs.length - 1) inputs[index + 1].focus();
-            } else if (e.key === 'Backspace') {
-                if (index > 0) inputs[index - 1].focus();
-            }
-            if(fullCodeHidden) {
-                let code = '';
-                inputs.forEach(i => code += i.value);
-                fullCodeHidden.value = code;
-            }
-        });
-    });
-</script>
+    <c:choose>
+        <c:when test="${step == 'restablecer'}">
+            <form action="${ctx}/reset-password" method="post">
+                <input type="hidden" name="action" value="restablecer">
+                <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}'/>">
+                <div class="mb-3"><label class="form-label fw-semibold" for="codigo">Código de 8 dígitos</label><input class="form-control" id="codigo" name="codigo" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" required></div>
+                <div class="mb-3"><label class="form-label fw-semibold" for="nuevaPassword">Nueva contraseña</label><input class="form-control" type="password" id="nuevaPassword" name="nuevaPassword" minlength="10" maxlength="200" required><div class="form-text">Mayúscula, minúscula, número y símbolo.</div></div>
+                <div class="mb-4"><label class="form-label fw-semibold" for="confirmarPassword">Confirmar contraseña</label><input class="form-control" type="password" id="confirmarPassword" name="confirmarPassword" minlength="10" maxlength="200" required></div>
+                <button class="btn btn-awgva w-100" type="submit">Actualizar contraseña</button>
+            </form>
+        </c:when>
+        <c:otherwise>
+            <form action="${ctx}/reset-password" method="post">
+                <input type="hidden" name="action" value="solicitar">
+                <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}'/>">
+                <div class="mb-4"><label class="form-label fw-semibold" for="correo">Correo institucional</label><input class="form-control" type="email" id="correo" name="correo" maxlength="160" placeholder="nombre@utez.edu.mx" required></div>
+                <button class="btn btn-awgva w-100" type="submit">Enviar código</button>
+            </form>
+        </c:otherwise>
+    </c:choose>
+    <a class="text-center mt-3" href="${ctx}/login.jsp">Volver al inicio de sesión</a>
+</main>
 </body>
 </html>

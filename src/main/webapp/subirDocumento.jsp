@@ -177,6 +177,7 @@
 
         <!-- Formulario para enviar al Servlet -->
         <form id="uploadForm" action="subir-documento" method="POST">
+            <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
             <footer class="action-buttons">
                 <!-- BOTÓN ANTERIOR: Redirige a solicitud-detalle.jsp con el índice -->
                 <button type="button" class="btn-action" onclick="volverADetalle()">Anterior</button>

@@ -43,6 +43,7 @@
     </div>
 
     <form id="solicitudForm" action="solicitud" method="post">
+        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}">
 
         <!-- SECCIÓN 1: Datos del Solicitante -->
         <div class="section-header">

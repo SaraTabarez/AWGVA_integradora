@@ -61,10 +61,14 @@
 <main class="main-layout">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold m-0" style="color: #2b2d42;">GESTIÓN DE USUARIOS</h3>
-    <a href="registrar-usuario.jsp" class="btn btn-custom-orange px-4 py-2 rounded shadow-sm">
+    <a href="${pageContext.request.contextPath}/RegistrarUsuarioServlet" class="btn btn-custom-orange px-4 py-2 rounded shadow-sm">
       <i class="bi bi-person-plus-fill me-2"></i>AGREGAR USUARIO
     </a>
   </div>
+
+  <c:if test="${param.creado == '1'}">
+    <div class="alert alert-success" role="alert">Usuario registrado correctamente.</div>
+  </c:if>
 
   <!-- Panel de Filtros -->
   <div class="card border-0 shadow-sm p-3 mb-4">
@@ -131,19 +135,19 @@
       <c:forEach var="usr" items="${listaUsuarios}">
         <tr id="usuario-${usr.idUsuario}" data-estado="${usr.estado == 1 ? 'activo' : 'inactivo'}">
           <td>${usr.idUsuario}</td>
-          <td>${usr.nombreCompleto}</td>
+          <td><c:out value="${usr.nombreCompleto}"/></td>
           <td>
                         <span class="badge
                             ${usr.nombreRol == 'ADMIN' ? 'bg-primary' :
                               usr.nombreRol == 'DOCENTE' ? 'bg-secondary' :
                               usr.nombreRol == 'DIRECTOR' ? 'bg-dark' : 'bg-info text-dark'}">
-                            ${usr.nombreRol != null ? usr.nombreRol : 'SIN ROL'}
+                            <c:out value="${usr.nombreRol != null ? usr.nombreRol : 'SIN ROL'}"/>
                         </span>
           </td>
           <td>
             <c:choose>
               <c:when test="${not empty usr.nombreDivision}">
-                ${usr.nombreDivision}
+                <c:out value="${usr.nombreDivision}"/>
               </c:when>
               <c:otherwise>
                 <span class="text-muted fst-italic">Sin División</span>
@@ -228,12 +232,32 @@
 
   function cambiarEstadoUsuario(idUsuario, checkElement) {
     let fila = document.getElementById("usuario-" + idUsuario);
-    if (checkElement.checked) {
-      fila.setAttribute("data-estado", "activo");
-    } else {
-      fila.setAttribute("data-estado", "inactivo");
-    }
-    filtrarTabla();
+    let estado = checkElement.checked ? 1 : 0;
+    let body = new URLSearchParams({
+      idUsuario: idUsuario,
+      estado: estado,
+      csrfToken: '<c:out value="${sessionScope.csrfToken}"/>'
+    });
+
+    checkElement.disabled = true;
+    fetch('${pageContext.request.contextPath}/ActualizarEstadoUsuarioServlet', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+      body: body.toString()
+    })
+      .then(response => response.json().then(data => ({ok: response.ok, data})))
+      .then(result => {
+        if (!result.ok || !result.data.success) {
+          throw new Error(result.data.message || 'No fue posible actualizar el estado.');
+        }
+        fila.setAttribute('data-estado', estado === 1 ? 'activo' : 'inactivo');
+        filtrarTabla();
+      })
+      .catch(error => {
+        checkElement.checked = !checkElement.checked;
+        alert(error.message);
+      })
+      .finally(() => checkElement.disabled = false);
   }
 </script>
 </body>
