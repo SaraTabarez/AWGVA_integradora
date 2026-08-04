@@ -136,6 +136,17 @@ public class UsuarioService {
         );
     }
 
+    public boolean changePassword(Usuario usuario, String currentPassword, String newPassword) {
+        if (usuario == null || currentPassword == null) return false;
+        Usuario verified = authenticate(usuario.getCorreo(), currentPassword);
+        if (verified == null || !verified.getIdUsuario().equals(usuario.getIdUsuario())) return false;
+        validatePassword(newPassword);
+        if (currentPassword.equals(newPassword)) {
+            throw new IllegalArgumentException("La contraseña nueva debe ser diferente a la actual.");
+        }
+        return usuarioDao.updatePasswordHash(usuario.getIdUsuario(), passwordService.hash(newPassword));
+    }
+
     private void validateRegistration(Usuario usuario, String password) {
         if (usuario == null) {
             throw new IllegalArgumentException("Los datos del usuario son obligatorios.");
@@ -154,12 +165,16 @@ public class UsuarioService {
         TipoRol role = TipoRol.from(roleName)
                 .orElseThrow(() -> new IllegalArgumentException("Selecciona un rol válido."));
 
-        if (!usuarioDao.divisionExists(usuario.getIdDivisionFk())) {
+        if (role == TipoRol.DOCENTE || role == TipoRol.DIRECTOR) {
+            if (usuario.getIdDivisionFk() == null) {
+                throw new IllegalArgumentException("Docente y Director deben tener una división asignada.");
+            }
+            if (!usuarioDao.divisionExists(usuario.getIdDivisionFk())) {
+                throw new IllegalArgumentException("La división seleccionada no existe.");
+            }
+        } else if (usuario.getIdDivisionFk() != null
+                && !usuarioDao.divisionExists(usuario.getIdDivisionFk())) {
             throw new IllegalArgumentException("La división seleccionada no existe.");
-        }
-        if ((role == TipoRol.DOCENTE || role == TipoRol.DIRECTOR)
-                && usuario.getIdDivisionFk() == null) {
-            throw new IllegalArgumentException("Docente y Director deben tener una división asignada.");
         }
         if (usuarioDao.emailExists(usuario.getCorreo())) {
             throw new IllegalArgumentException("Ya existe un usuario con ese correo.");
