@@ -2,87 +2,136 @@ package mx.edu.utez.awgva.Utils;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-public class DatabaseConnection {
+/**
+ * Fábrica de conexiones. Las credenciales se toman primero de variables de
+ * entorno; database.properties queda únicamente como alternativa local no
+ * versionada.
+ */
+public final class DatabaseConnection {
 
     private static final String PROPERTIES_FILE = "database.properties";
-    private static Properties dbProperties;
+    private static final Properties DB_PROPERTIES = loadProperties();
 
     static {
-        dbProperties = new Properties();
-        try (InputStream is = DatabaseConnection.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
-            if (is == null) {
-                throw new RuntimeException("No se encontró el archivo " + PROPERTIES_FILE + " en el classpath");
-            }
-            dbProperties.load(is);
-
-            Class.forName(dbProperties.getProperty("db.driver"));
-            System.out.println("Driver de Oracle cargado correctamente.");
-
-        } catch (Exception e) {
-            System.err.println("Error al cargar las propiedades: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("No se pudo inicializar la base de datos", e);
+        try {
+            Class.forName(value("DB_DRIVER", "db.driver", "oracle.jdbc.OracleDriver"));
+        } catch (ClassNotFoundException exception) {
+            throw new ExceptionInInitializerError("No se encontró el controlador JDBC de Oracle.");
         }
+    }
+
+    private DatabaseConnection() {
     }
 
     public static Connection getConnection() throws SQLException {
-        String url = dbProperties.getProperty("db.url");
+        String url = required("DB_URL", "db.url");
+        String user = required("DB_USER", "db.user");
+        String password = required("DB_PASSWORD", "db.password");
 
-        Properties info = new Properties();
-        info.put("user", dbProperties.getProperty("db.user"));
-        info.put("password", dbProperties.getProperty("db.password"));
+        Properties connectionProperties = new Properties();
+        connectionProperties.setProperty("user", user);
+        connectionProperties.setProperty("password", password);
 
-        // --- DETECCIÓN DINÁMICA DE LA RUTA DE LA WALLET ---
-        URL walletUrl = DatabaseConnection.class.getClassLoader().getResource("Wallet");
-
-        if (walletUrl == null) {
-            throw new SQLException("No se encontró la carpeta 'Wallet' en el classpath (resources).");
+        String walletDirectory = resolveWalletDirectory();
+        if (walletDirectory != null) {
+            connectionProperties.setProperty("oracle.net.tns_admin", walletDirectory);
+            configureJksStores(connectionProperties, walletDirectory);
         }
 
-        // Decodificamos la ruta por si tiene espacios o caracteres especiales en Windows
-        String walletDir = URLDecoder.decode(walletUrl.getPath(), StandardCharsets.UTF_8);
+        return DriverManager.getConnection(url, connectionProperties);
+    }
 
-        // En Windows, getPath() devuelve "/C:/Ruta...", así que lo convertimos a un File válido
-        walletDir = new File(walletDir).getAbsolutePath();
+    private static void configureJksStores(Properties properties, String walletDirectory) {
+        String walletPassword = value("ORACLE_WALLET_PASSWORD", "wallet.password", null);
+        File trustStore = new File(walletDirectory, "truststore.jks");
+        File keyStore = new File(walletDirectory, "keystore.jks");
 
-        // Asignamos las rutas dinámicas directamente a la conexión
-        info.put("oracle.net.tns_admin", walletDir);
+        if (walletPassword == null || !trustStore.isFile() || !keyStore.isFile()) {
+            return;
+        }
 
-        info.put("javax.net.ssl.trustStore", walletDir + File.separator + "truststore.jks");
-        info.put("javax.net.ssl.trustStoreType", "JKS");
-        info.put("javax.net.ssl.trustStorePassword", "AWGVAint3Bdsm");
+        properties.setProperty("javax.net.ssl.trustStore", trustStore.getAbsolutePath());
+        properties.setProperty("javax.net.ssl.trustStoreType", "JKS");
+        properties.setProperty("javax.net.ssl.trustStorePassword", walletPassword);
+        properties.setProperty("javax.net.ssl.keyStore", keyStore.getAbsolutePath());
+        properties.setProperty("javax.net.ssl.keyStoreType", "JKS");
+        properties.setProperty("javax.net.ssl.keyStorePassword", walletPassword);
+    }
 
-        info.put("javax.net.ssl.keyStore", walletDir + File.separator + "keystore.jks");
-        info.put("javax.net.ssl.keyStoreType", "JKS");
-        info.put("javax.net.ssl.keyStorePassword", "AWGVAint3Bdsm");
-        // ------------------------------------------------
+    private static String resolveWalletDirectory() throws SQLException {
+        String configuredPath = System.getenv("ORACLE_WALLET_DIR");
+        if (configuredPath != null && !configuredPath.isBlank()) {
+            File directory = new File(configuredPath.trim());
+            if (!directory.isDirectory()) {
+                throw new SQLException("ORACLE_WALLET_DIR no apunta a una carpeta válida.");
+            }
+            return directory.getAbsolutePath();
+        }
+
+        URL resource = DatabaseConnection.class.getClassLoader().getResource("Wallet");
+        if (resource == null) {
+            return null;
+        }
 
         try {
-            Connection conn = DriverManager.getConnection(url, info);
-            System.out.println("✓ Conexión establecida con éxito a Oracle Cloud (Ruta Dinámica).");
-            return conn;
-        } catch (SQLException e) {
-            System.err.println("✗ Error al conectar a la base de datos: " + e.getMessage());
-            throw e;
+            URI uri = resource.toURI();
+            if (!"file".equalsIgnoreCase(uri.getScheme())) {
+                throw new SQLException("Configura ORACLE_WALLET_DIR al desplegar el WAR.");
+            }
+            Path directory = Path.of(uri).toAbsolutePath();
+            return Files.isRegularFile(directory.resolve("tnsnames.ora"))
+                    ? directory.toString()
+                    : null;
+        } catch (Exception exception) {
+            if (exception instanceof SQLException sqlException) {
+                throw sqlException;
+            }
+            throw new SQLException("No fue posible resolver la carpeta Wallet.", exception);
         }
     }
 
-    public static void closeConnection(Connection conn) {
-        if (conn != null) {
-            try {
-                conn.close();
-                System.out.println("✓ Conexión cerrada correctamente.");
-            } catch (SQLException e) {
-                System.err.println("✗ Error al cerrar la conexión: " + e.getMessage());
+    private static Properties loadProperties() {
+        Properties properties = new Properties();
+        try (InputStream input = DatabaseConnection.class.getClassLoader()
+                .getResourceAsStream(PROPERTIES_FILE)) {
+            if (input != null) {
+                properties.load(input);
             }
+            return properties;
+        } catch (Exception exception) {
+            throw new ExceptionInInitializerError("No fue posible leer database.properties.");
         }
+    }
+
+    private static String required(String environmentName, String propertyName) throws SQLException {
+        String result = value(environmentName, propertyName, null);
+        if (result == null) {
+            throw new SQLException(
+                    "Falta configurar " + environmentName + " o la propiedad local " + propertyName + "."
+            );
+        }
+        return result;
+    }
+
+    private static String value(String environmentName, String propertyName, String defaultValue) {
+        String environmentValue = System.getenv(environmentName);
+        if (environmentValue != null && !environmentValue.isBlank()) {
+            return environmentValue.trim();
+        }
+
+        String propertyValue = DB_PROPERTIES.getProperty(propertyName);
+        if (propertyValue != null && !propertyValue.isBlank()) {
+            return propertyValue.trim();
+        }
+        return defaultValue;
     }
 }
