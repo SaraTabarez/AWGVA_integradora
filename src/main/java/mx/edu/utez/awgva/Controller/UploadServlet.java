@@ -1,79 +1,113 @@
 package mx.edu.utez.awgva.Controller;
 
-import mx.edu.utez.awgva.Model.SolicitudVisita;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
+import mx.edu.utez.awgva.Model.SolicitudVisita;
+import mx.edu.utez.awgva.Utils.FileValidationUtil;
 
-@WebServlet(name = "UploadServlet", urlPatterns = {"/UploadServlet"})
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
+
+@WebServlet(name = "UploadEvidenceServlet", urlPatterns = {"/UploadServlet"})
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024 * 2, // 2MB
-        maxFileSize = 1024 * 1024 * 10,      // 10MB
-        maxRequestSize = 1024 * 1024 * 50    // 50MB
+        fileSizeThreshold = 2 * 1024 * 1024,
+        maxFileSize = 10 * 1024 * 1024,
+        maxRequestSize = 50 * 1024 * 1024
 )
 public class UploadServlet extends HttpServlet {
 
-    private static final String UPLOAD_DIR = "evidencias_reportes";
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(".pdf", ".png", ".jpg", ".jpeg", ".webp");
+    private Path uploadRoot;
+
+    @Override
+    public void init() throws ServletException {
+        String configuredDirectory = System.getenv("AWGVA_UPLOAD_DIR");
+        Path base = configuredDirectory == null || configuredDirectory.isBlank()
+                ? ((java.io.File) getServletContext().getAttribute("jakarta.servlet.context.tempdir")).toPath()
+                : Path.of(configuredDirectory);
+        uploadRoot = base.resolve("evidencias-reportes").toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(uploadRoot);
+        } catch (IOException exception) {
+            throw new ServletException("No fue posible preparar el almacenamiento de evidencias.", exception);
+        }
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         request.setCharacterEncoding("UTF-8");
 
-        // 1. Ruta de guardado física
-        String applicationPath = request.getServletContext().getRealPath("");
-        String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
-
-        File fileSaveDir = new File(uploadFilePath);
-        if (!fileSaveDir.exists()) {
-            fileSaveDir.mkdirs();
-        }
-
-        // 2. Obtener el índice de la solicitud enviada desde el formulario
-        String indexParam = request.getParameter("solicitudIndex");
-
-        // 3. Guardar las imágenes físicamente
         for (Part part : request.getParts()) {
-            String fileName = getFileName(part);
-            if (fileName != null && !fileName.isEmpty()) {
-                part.write(uploadFilePath + File.separator + fileName);
+            String submittedName = part.getSubmittedFileName();
+            if (submittedName == null || submittedName.isBlank()) {
+                continue;
+            }
+
+            String extension = extensionOf(submittedName);
+            if (!ALLOWED_EXTENSIONS.contains(extension) || part.getSize() == 0) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tipo de archivo no permitido.");
+                return;
+            }
+
+            Path target = uploadRoot.resolve(UUID.randomUUID() + extension).normalize();
+            if (!target.startsWith(uploadRoot)) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            try (InputStream input = part.getInputStream()) {
+                Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+            if (!FileValidationUtil.hasExpectedSignature(target, extension)) {
+                Files.deleteIfExists(target);
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "El contenido del archivo no coincide con su extensión.");
+                return;
             }
         }
 
-        // 4. CAMBIAR EL ESTADO EN LA SESIÓN A "REPORTE_ENVIADO"
-        if (indexParam != null && !indexParam.isEmpty()) {
-            try {
-                int index = Integer.parseInt(indexParam);
-                HttpSession session = request.getSession();
-                List<SolicitudVisita> listaSolicitudes = (List<SolicitudVisita>) session.getAttribute("listaSolicitudes");
-
-                if (listaSolicitudes != null && index >= 0 && index < listaSolicitudes.size()) {
-                    SolicitudVisita sol = listaSolicitudes.get(index);
-                    sol.setEstado("REPORTE_ENVIADO");
-                }
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-            }
-        }
-
-        // 5. Redirigir a la vista de éxito
-        response.sendRedirect("reporte-exito.jsp");
+        updateSessionStatus(request);
+        response.sendRedirect(request.getContextPath() + "/reporte-exito.jsp");
     }
 
-    private String getFileName(Part part) {
-        String contentDisp = part.getHeader("content-disposition");
-        String[] tokens = contentDisp.split(";");
-        for (String token : tokens) {
-            if (token.trim().startsWith("filename")) {
-                return token.substring(token.indexOf("=") + 2, token.length() - 1);
-            }
+    private void updateSessionStatus(HttpServletRequest request) {
+        String indexParam = request.getParameter("solicitudIndex");
+        if (indexParam == null || indexParam.isBlank()) {
+            return;
         }
-        return "";
+
+        try {
+            int index = Integer.parseInt(indexParam);
+            HttpSession session = request.getSession(false);
+            @SuppressWarnings("unchecked")
+            List<SolicitudVisita> solicitudes = session == null
+                    ? null
+                    : (List<SolicitudVisita>) session.getAttribute("listaSolicitudes");
+            if (solicitudes != null && index >= 0 && index < solicitudes.size()) {
+                solicitudes.get(index).setEstado("REPORTE_ENVIADO");
+            }
+        } catch (NumberFormatException ignored) {
+            // El índice no es confiable; se ignora sin afectar el archivo validado.
+        }
+    }
+
+    private String extensionOf(String fileName) {
+        String normalizedName = fileName.replace('\\', '/');
+        normalizedName = normalizedName.substring(normalizedName.lastIndexOf('/') + 1)
+                .toLowerCase(Locale.ROOT);
+        int dot = normalizedName.lastIndexOf('.');
+        return dot < 0 ? "" : normalizedName.substring(dot);
     }
 }
