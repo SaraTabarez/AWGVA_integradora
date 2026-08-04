@@ -32,7 +32,7 @@ public class UsuarioDao {
     public List<Usuario> findAll() {
         List<Usuario> usuarios = new ArrayList<>();
         String sql = "SELECT " + LIST_COLUMNS
-                + ", r.NOMBRE AS NOMBRE_ROL, d.NOMBRE AS NOMBRE_DIVISION "
+                + ", r.ROL AS NOMBRE_ROL, d.DIVISION AS NOMBRE_DIVISION "
                 + "FROM USUARIO u "
                 + "LEFT JOIN ROL r ON r.ID_ROL = u.ID_ROL_FK "
                 + "LEFT JOIN DIVISION d ON d.ID_DIVISION = u.ID_DIVISION_FK "
@@ -53,7 +53,7 @@ public class UsuarioDao {
 
     public Usuario findByEmail(String correo) {
         String sql = "SELECT " + USER_COLUMNS
-                + ", r.NOMBRE AS NOMBRE_ROL, d.NOMBRE AS NOMBRE_DIVISION "
+                + ", r.ROL AS NOMBRE_ROL, d.DIVISION AS NOMBRE_DIVISION "
                 + "FROM USUARIO u "
                 + "JOIN ROL r ON r.ID_ROL = u.ID_ROL_FK "
                 + "LEFT JOIN DIVISION d ON d.ID_DIVISION = u.ID_DIVISION_FK "
@@ -73,7 +73,7 @@ public class UsuarioDao {
 
     public Usuario findByResetToken(String token, String correo) {
         String sql = "SELECT " + USER_COLUMNS
-                + ", r.NOMBRE AS NOMBRE_ROL, d.NOMBRE AS NOMBRE_DIVISION "
+                + ", r.ROL AS NOMBRE_ROL, d.DIVISION AS NOMBRE_DIVISION "
                 + "FROM USUARIO u "
                 + "JOIN ROL r ON r.ID_ROL = u.ID_ROL_FK "
                 + "LEFT JOIN DIVISION d ON d.ID_DIVISION = u.ID_DIVISION_FK "
@@ -206,14 +206,14 @@ public class UsuarioDao {
     }
 
     public Map<Long, String> findRoles() {
-        return findCatalog("SELECT ID_ROL, NOMBRE FROM ROL ORDER BY NOMBRE", "ID_ROL", "NOMBRE");
+        return findCatalog("SELECT ID_ROL, ROL FROM ROL ORDER BY ROL", "ID_ROL", "ROL");
     }
 
     public Map<Long, String> findDivisiones() {
         return findCatalog(
-                "SELECT ID_DIVISION, NOMBRE FROM DIVISION ORDER BY NOMBRE",
+                "SELECT ID_DIVISION, DIVISION FROM DIVISION ORDER BY DIVISION",
                 "ID_DIVISION",
-                "NOMBRE"
+                "DIVISION"
         );
     }
 
