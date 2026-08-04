@@ -21,8 +21,7 @@ public class EmailSender {
         String userTemp = System.getenv("SMTP_USER");
         String passTemp = System.getenv("SMTP_PASS");
 
-        if (userTemp == null || passTemp == null) {
-            System.err.println("Variables de entorno no encontradas. Buscando en credentials.properties...");
+        if (userTemp == null || userTemp.isBlank() || passTemp == null || passTemp.isBlank()) {
             Properties creds = new Properties();
             try (InputStream is = EmailSender.class.getClassLoader().getResourceAsStream("credentials.properties")) {
                 if (is == null) {
@@ -38,7 +37,11 @@ public class EmailSender {
                 throw new RuntimeException("Error al cargar credenciales: " + e.getMessage());
             }
         }
-     final String usuario = userTemp;
+        if (userTemp == null || userTemp.isBlank() || passTemp == null || passTemp.isBlank()) {
+            throw new IllegalStateException("Configura SMTP_USER y SMTP_PASS para enviar correos.");
+        }
+
+        final String usuario = userTemp;
         final String contrasena = passTemp;
 
         Session session = Session.getInstance(props, new Authenticator() {
@@ -59,8 +62,7 @@ public class EmailSender {
 
         } catch (MessagingException e) {
             System.err.println("Error al enviar correo: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("No se pudo enviar el correo: " + e.getMessage());
+            throw new RuntimeException("No se pudo enviar el correo.", e);
         }
     }
 }
