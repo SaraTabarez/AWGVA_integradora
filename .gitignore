@@ -37,3 +37,12 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Secretos y archivos generados ###
+src/main/resources/database.properties
+src/main/resources/credentials.properties
+src/main/resources/Wallet/*
+!src/main/resources/Wallet/README
+src/main/webapp/uploads/
+src/main/webapp/evidencias_reportes/*
+!src/main/webapp/evidencias_reportes/.gitkeep
