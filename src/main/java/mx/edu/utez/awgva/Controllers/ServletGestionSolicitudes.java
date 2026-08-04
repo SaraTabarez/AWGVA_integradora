@@ -24,7 +24,7 @@ public class ServletGestionSolicitudes extends HttpServlet {
         // Enviamos la lista completa a la vista
         req.setAttribute("solicitudes", listaSolicitudes);
 
-        // Renderizamos la vista ubicada en WEB-INF
-        req.getRequestDispatcher("/WEB-INF/gestion-solicitudes.jsp").forward(req, resp);
+        // La vista existente está en la raíz de webapp.
+        req.getRequestDispatcher("/gestion-solicitudes.jsp").forward(req, resp);
     }
 }
