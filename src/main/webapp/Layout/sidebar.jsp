@@ -8,94 +8,174 @@
 <style>
     .sidebar {
         width: 240px;
-        background-color: #1e3a5f;
-        color: #ffffff;
-        padding: 32px 20px 24px;
         height: 100vh;
         position: fixed;
         inset: 0 auto 0 0;
+        z-index: 1000;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        z-index: 1000;
+        padding: 46px 25px 28px;
         box-sizing: border-box;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #1f3d63;
+        color: #ffffff;
+        font-family: "Segoe UI", Arial, sans-serif;
     }
-    .sidebar .user-profile { text-align: center; margin-bottom: 32px; }
-    .sidebar .avatar {
-        width: 76px; height: 76px; margin: 0 auto 14px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        background: #dbe4ee; color: #1e3a5f; font-size: 38px;
+
+    .sidebar-profile {
+        text-align: center;
+        margin-bottom: 48px;
     }
-    .sidebar .user-name { font-weight: 700; font-size: .92rem; line-height: 1.25; }
-    .sidebar .user-role { color: #ffad5c; font-size: .76rem; font-weight: 800; letter-spacing: 1px; margin-top: 5px; }
-    .sidebar ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 7px; }
-    .sidebar .nav-link-role, .sidebar .logout-button {
-        width: 100%; border: 0; color: #fff; background: transparent; text-decoration: none;
-        display: flex; align-items: center; gap: 12px; padding: 10px 12px;
-        border-radius: 7px; font-weight: 650; font-size: .91rem; text-align: left;
+
+    .sidebar-avatar {
+        width: 82px;
+        height: 82px;
+        margin: 0 auto 15px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: #e6e9ed;
+        color: #172f4e;
+        font-size: 42px;
     }
-    .sidebar .nav-link-role:hover, .sidebar .nav-link-role.active, .sidebar .logout-button:hover {
-        background: rgba(255, 255, 255, .14); color: #fff;
+
+    .sidebar-role {
+        color: #ffffff;
+        font-size: .86rem;
+        font-weight: 800;
+        letter-spacing: .055em;
+        text-transform: uppercase;
     }
-    .sidebar .nav-link-role i, .sidebar .logout-button i { width: 22px; text-align: center; font-size: 1.12rem; }
-    .sidebar .logout-form { margin: 0; }
-    .sidebar .logout-button { cursor: pointer; }
+
+    .sidebar-nav,
+    .sidebar-nav ul {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .sidebar-nav ul {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .sidebar-link,
+    .sidebar-logout {
+        width: 100%;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 9px 11px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #ffffff;
+        text-decoration: none;
+        text-align: left;
+        font: inherit;
+        font-size: .91rem;
+        font-weight: 650;
+        cursor: pointer;
+        transition: color .18s ease, background-color .18s ease;
+    }
+
+    .sidebar-link i,
+    .sidebar-logout i {
+        width: 21px;
+        text-align: center;
+        font-size: 1.05rem;
+    }
+
+    .sidebar-link:hover,
+    .sidebar-logout:hover {
+        color: #ff941f;
+        background: rgba(255, 255, 255, .06);
+    }
+
+    .sidebar-link.active {
+        color: #ff941f;
+        background: transparent;
+    }
+
+    .sidebar-bottom {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .sidebar-logout-form { margin: 0; }
+
     @media (max-width: 768px) {
-        .sidebar { position: static; width: 100%; height: auto; padding: 18px; }
-        .sidebar .user-profile { margin-bottom: 16px; }
-        .sidebar .avatar { width: 58px; height: 58px; font-size: 28px; }
+        .sidebar {
+            width: 100%;
+            height: auto;
+            position: static;
+            padding: 20px;
+        }
+
+        .sidebar-profile { margin-bottom: 18px; }
+        .sidebar-avatar { width: 62px; height: 62px; font-size: 31px; }
+        .sidebar-bottom { margin-top: 22px; }
     }
 </style>
 
 <aside class="sidebar" aria-label="Navegación principal">
     <div>
-        <div class="user-profile">
-            <div class="avatar" aria-hidden="true"><i class="bi bi-person"></i></div>
-            <div class="user-name"><c:out value="${sessionScope.nombreUsuario}"/></div>
-            <div class="user-role"><c:out value="${sessionScope.rol}"/></div>
+        <div class="sidebar-profile">
+            <div class="sidebar-avatar" aria-hidden="true"><i class="bi bi-person"></i></div>
+            <div class="sidebar-role"><c:out value="${sessionScope.rol}"/></div>
         </div>
 
-        <nav>
+        <nav class="sidebar-nav">
             <ul>
                 <li>
-                    <a href="${ctx}/inicio" class="nav-link-role ${fn:endsWith(currentPath, '/inicio') ? 'active' : ''}">
+                    <a href="${ctx}/inicio"
+                       class="sidebar-link ${fn:endsWith(currentPath, '/inicio') ? 'active' : ''}">
                         <i class="bi bi-house-door"></i><span>Inicio</span>
                     </a>
                 </li>
 
                 <c:choose>
                     <c:when test="${sessionScope.rol == 'DOCENTE'}">
-                        <li><a href="${ctx}/solicitud.jsp" class="nav-link-role ${fn:contains(currentPath, 'solicitud') ? 'active' : ''}"><i class="bi bi-file-earmark-text"></i><span>Solicitudes</span></a></li>
-                        <li><a href="${ctx}/subir-docs.jsp" class="nav-link-role ${fn:contains(currentPath, 'subir-docs') ? 'active' : ''}"><i class="bi bi-cloud-arrow-up"></i><span>Reportes</span></a></li>
-                        <li><a href="${ctx}/historico-docente.jsp" class="nav-link-role ${fn:contains(currentPath, 'historico-docente') ? 'active' : ''}"><i class="bi bi-clock-history"></i><span>Histórico</span></a></li>
+                        <li><a href="${ctx}/mis-solicitudes" class="sidebar-link ${fn:contains(currentPath, 'solicitud') ? 'active' : ''}"><i class="bi bi-file-earmark-text"></i><span>Solicitud</span></a></li>
+                        <li><a href="${ctx}/reportes-docente" class="sidebar-link ${fn:contains(currentPath, 'reportes-docente') ? 'active' : ''}"><i class="bi bi-file-earmark-bar-graph"></i><span>Reporte</span></a></li>
+                        <li><a href="${ctx}/historico-docente" class="sidebar-link ${fn:contains(currentPath, 'historico-docente') ? 'active' : ''}"><i class="bi bi-clock-history"></i><span>Histórico</span></a></li>
                     </c:when>
 
                     <c:when test="${sessionScope.rol == 'DIRECTOR'}">
-                        <li><a href="${ctx}/servlet-gestion-solicitudes" class="nav-link-role ${fn:contains(currentPath, 'gestion-solicitudes') ? 'active' : ''}"><i class="bi bi-clipboard-check"></i><span>Revisar solicitudes</span></a></li>
+                        <li><a href="${ctx}/director/solicitudes" class="sidebar-link ${fn:contains(currentPath, '/director/solicitud') ? 'active' : ''}"><i class="bi bi-file-earmark-check"></i><span>Solicitudes</span></a></li>
+                        <li><a href="${ctx}/director/historico" class="sidebar-link ${fn:contains(currentPath, '/director/historico') ? 'active' : ''}"><i class="bi bi-clock-history"></i><span>Histórico</span></a></li>
                     </c:when>
 
                     <c:when test="${sessionScope.rol == 'ESTADIAS'}">
-                        <li><a href="${ctx}/gestion-documentos.jsp" class="nav-link-role ${fn:contains(currentPath, 'gestion-documentos') ? 'active' : ''}"><i class="bi bi-folder-check"></i><span>Documentos</span></a></li>
-                        <li><a href="${ctx}/revisar-reporte.jsp" class="nav-link-role ${fn:contains(currentPath, 'revisar-reporte') ? 'active' : ''}"><i class="bi bi-journal-check"></i><span>Revisar reportes</span></a></li>
-                        <li><a href="${ctx}/historico-estadias.jsp" class="nav-link-role ${fn:contains(currentPath, 'historico-estadias') ? 'active' : ''}"><i class="bi bi-clock-history"></i><span>Histórico</span></a></li>
+                        <li><a href="${ctx}/estadias/documentos" class="sidebar-link ${fn:contains(currentPath, '/estadias/document') ? 'active' : ''}"><i class="bi bi-folder2-open"></i><span>Gestión de archivos</span></a></li>
+                        <li><a href="${ctx}/estadias/historico" class="sidebar-link ${fn:contains(currentPath, '/estadias/historico') ? 'active' : ''}"><i class="bi bi-clock-history"></i><span>Histórico</span></a></li>
                     </c:when>
 
                     <c:when test="${sessionScope.rol == 'ADMIN'}">
-                        <li><a href="${ctx}/servlet-gestion-solicitudes" class="nav-link-role"><i class="bi bi-clipboard-check"></i><span>Solicitudes</span></a></li>
-                        <li><a href="${ctx}/gestion-documentos.jsp" class="nav-link-role"><i class="bi bi-folder-check"></i><span>Documentos</span></a></li>
-                        <li><a href="${ctx}/revisar-reporte.jsp" class="nav-link-role"><i class="bi bi-journal-check"></i><span>Reportes</span></a></li>
-                        <li><a href="${ctx}/GestionUsuariosServlet" class="nav-link-role ${fn:contains(currentPath, 'Usuario') || fn:contains(currentPath, 'usuario') ? 'active' : ''}"><i class="bi bi-people"></i><span>Usuarios</span></a></li>
+                        <li><a href="${ctx}/GestionUsuariosServlet" class="sidebar-link ${fn:contains(currentPath, 'Usuario') || fn:contains(currentPath, 'usuario') ? 'active' : ''}"><i class="bi bi-people"></i><span>Usuarios</span></a></li>
+                        <li><a href="${ctx}/RegistrarUsuarioServlet" class="sidebar-link"><i class="bi bi-person-plus"></i><span>Registrar usuario</span></a></li>
                     </c:when>
                 </c:choose>
             </ul>
         </nav>
     </div>
 
-    <form method="post" action="${ctx}/logout" class="logout-form">
-        <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}'/>"/>
-        <button type="submit" class="logout-button">
-            <i class="bi bi-box-arrow-left"></i><span>Cerrar sesión</span>
-        </button>
-    </form>
+    <div class="sidebar-bottom">
+        <c:if test="${sessionScope.rol == 'DIRECTOR'}">
+            <a href="${ctx}/cambiar-contrasena" class="sidebar-link ${fn:contains(currentPath, 'cambiar-contrasena') ? 'active' : ''}">
+                <i class="bi bi-key"></i><span>Cambiar contraseña</span>
+            </a>
+        </c:if>
+
+        <form method="post" action="${ctx}/logout" class="sidebar-logout-form">
+            <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}'/>"/>
+            <button type="submit" class="sidebar-logout">
+                <i class="bi bi-box-arrow-right"></i><span>Cerrar sesión</span>
+            </button>
+        </form>
+    </div>
 </aside>
